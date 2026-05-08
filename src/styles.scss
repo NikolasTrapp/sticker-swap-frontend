@@ -1,0 +1,145 @@
+:root {
+  --brand: #0f766e;
+  --brand-strong: #115e59;
+  --brand-soft: #ccfbf1;
+  --ink: #10201f;
+  --muted: #5f6f6c;
+  --surface: #fffdf7;
+  --surface-2: #f4f1e7;
+  --line: #ddd6c3;
+  --danger: #b42318;
+  --radius: 22px;
+  color-scheme: light;
+  font-family: "Aptos", "Segoe UI", sans-serif;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(15, 118, 110, 0.18), transparent 32rem),
+    radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.16), transparent 28rem),
+    linear-gradient(135deg, #fffdf7 0%, #f7f0df 100%);
+  color: var(--ink);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+}
+
+.page {
+  display: grid;
+  gap: 1rem;
+  margin: 0 auto;
+  max-width: 1180px;
+  padding: 1rem;
+}
+
+.hero-card,
+.panel,
+.metric-card {
+  backdrop-filter: blur(18px);
+  background: rgba(255, 253, 247, 0.88);
+  border: 1px solid rgba(221, 214, 195, 0.8);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(23, 42, 39, 0.08);
+}
+
+.hero-card {
+  padding: clamp(1.25rem, 4vw, 2.25rem);
+}
+
+.panel {
+  padding: 1rem;
+}
+
+.section-title {
+  align-items: flex-start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.section-title h1,
+.section-title h2,
+.hero-card h1 {
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+  margin: 0;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.grid.two {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.grid.three {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.form-grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pill {
+  align-items: center;
+  background: var(--brand-soft);
+  border-radius: 999px;
+  color: var(--brand-strong);
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 700;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+}
+
+.empty {
+  border: 1px dashed var(--line);
+  border-radius: 18px;
+  color: var(--muted);
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.full-width {
+  width: 100%;
+}
+
+@media (min-width: 800px) {
+  .page {
+    padding: 1.5rem 2rem 2rem;
+  }
+}
