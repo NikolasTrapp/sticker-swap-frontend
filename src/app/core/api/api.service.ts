@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { RuntimeConfigService } from '../config/runtime-config.service';
 import {
   AlbumResponse,
+  BlockedUserResponse,
+  CepLookupResponse,
   CollectionFilter,
   CollectionStickerResponse,
   ConversationResponse,
@@ -71,6 +73,10 @@ export class ApiService {
 
   updateProfile(payload: Partial<MyProfileResponse>): Observable<MyProfileResponse> {
     return this.http.put<MyProfileResponse>(this.config.apiUrl('/me/profile'), payload);
+  }
+
+  lookupCep(cep: string): Observable<CepLookupResponse> {
+    return this.http.get<CepLookupResponse>(this.config.apiUrl(`/ceps/${cep}`));
   }
 
   publicProfile(userId: string): Observable<PublicProfileResponse> {
@@ -162,6 +168,12 @@ export class ApiService {
 
   blockUser(userId: string): Observable<void> {
     return this.http.put<void>(this.config.apiUrl(`/users/${userId}/block`), {});
+  }
+
+  blockedUsers(page = 0, size = 10): Observable<Page<BlockedUserResponse>> {
+    return this.http.get<Page<BlockedUserResponse>>(this.config.apiUrl('/me/blocked-users'), {
+      params: this.params({ page, size })
+    });
   }
 
   unblockUser(userId: string): Observable<void> {

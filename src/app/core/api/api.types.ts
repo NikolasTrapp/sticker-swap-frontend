@@ -64,6 +64,13 @@ export interface PublicProfileResponse {
   state: string | null;
 }
 
+export interface CepLookupResponse {
+  cep: string;
+  city: string | null;
+  state: string | null;
+  found: boolean;
+}
+
 export interface RepeatedStickerResponse {
   id: string;
   stickerId: string;
@@ -101,6 +108,14 @@ export interface HolderResponse {
   quantity: number;
   isPotentialMatch: boolean;
   lastActivityAt: string | null;
+}
+
+export interface BlockedUserResponse {
+  userId: string;
+  nickname: string | null;
+  city: string | null;
+  state: string | null;
+  blockedAt: string;
 }
 
 export interface ConversationResponse {

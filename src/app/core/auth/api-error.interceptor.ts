@@ -101,6 +101,9 @@ function friendlyValidation(message?: string | null): string {
   if (normalized.includes('must be a well-formed email')) {
     return 'informe um e-mail válido.';
   }
+  if (normalized.includes('brazilian zip code')) {
+    return 'informe um CEP com 8 dígitos.';
+  }
   if (normalized.includes('must not be blank') || normalized.includes('required')) {
     return 'preencha este campo.';
   }
@@ -138,6 +141,9 @@ function friendlyBodyMessage(message?: string | null): string | null {
   }
   if (normalized.includes('email already registered')) {
     return 'Este e-mail já está cadastrado.';
+  }
+  if (normalized.includes('cep não encontrado')) {
+    return 'Não encontramos esse CEP.';
   }
   if (normalized.includes('validation failed')) {
     return 'Revise os campos destacados e tente novamente.';
