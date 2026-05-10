@@ -3,6 +3,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -15,6 +16,7 @@ import { ApiService } from '../../core/api/api.service';
   imports: [
     MatButtonModule,
     MatCardModule,
+    MatDividerModule,
     MatFormFieldModule,
     MatInputModule,
     MatSlideToggleModule,
@@ -23,15 +25,19 @@ import { ApiService } from '../../core/api/api.service';
   ],
   template: `
     <main class="page">
-      <section class="hero-card">
+      <section class="app-page-header">
         <span class="pill">Perfil</span>
-        <h1>Controle sua identidade pública e privacidade.</h1>
-        <p class="muted">CEP é privado. Cidade e UF só aparecem quando você permitir.</p>
+        <h1>Perfil e privacidade</h1>
+        <p class="app-muted">Defina como você aparece nas buscas e quais dados ajudam a priorizar trocas próximas.</p>
       </section>
 
-      <mat-card class="panel">
+      <mat-card class="outlined-card profile-card">
+        <mat-card-header>
+          <mat-card-title>Dados públicos</mat-card-title>
+          <mat-card-subtitle>CEP não aparece para outros usuários.</mat-card-subtitle>
+        </mat-card-header>
         <mat-card-content>
-          <form [formGroup]="form" (ngSubmit)="save()" class="form-grid">
+          <form [formGroup]="form" (ngSubmit)="save()" class="form-grid profile-form">
             <mat-form-field>
               <mat-label>Nickname</mat-label>
               <input matInput formControlName="nickname" maxlength="50" />
@@ -50,19 +56,35 @@ import { ApiService } from '../../core/api/api.service';
                 <input matInput formControlName="state" maxlength="2" />
               </mat-form-field>
             </div>
+            <mat-divider />
             <mat-slide-toggle formControlName="showCityStatePublicly">Exibir cidade/UF publicamente</mat-slide-toggle>
             <mat-slide-toggle formControlName="useLocationForSearch">Usar localização para priorizar buscas</mat-slide-toggle>
             <div class="actions">
               <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || saving()">
                 {{ saving() ? 'Salvando...' : 'Salvar perfil' }}
               </button>
-              <span class="muted" *ngIf="saved()">Perfil atualizado.</span>
+              <span class="success" *ngIf="saved()">Perfil atualizado.</span>
             </div>
           </form>
         </mat-card-content>
       </mat-card>
     </main>
-  `
+  `,
+  styles: [
+    `
+      .profile-card mat-card-content {
+        padding-top: 1.25rem !important;
+      }
+
+      .profile-form mat-divider {
+        margin: 0.35rem 0 0.25rem;
+      }
+
+      .profile-form mat-slide-toggle {
+        justify-self: start;
+      }
+    `
+  ]
 })
 export class ProfileComponent implements OnInit {
   readonly saving = signal(false);

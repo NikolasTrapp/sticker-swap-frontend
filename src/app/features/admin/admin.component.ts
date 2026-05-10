@@ -8,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 import { finalize } from 'rxjs';
-import { AlbumResponse, ReportResponse, ReportStatus, StickerResponse } from '../../core/api/api.types';
+import { AlbumResponse, ReportReason, ReportResponse, ReportStatus, StickerResponse } from '../../core/api/api.types';
 import { ApiService } from '../../core/api/api.service';
 
 @Component({
@@ -28,10 +28,10 @@ import { ApiService } from '../../core/api/api.service';
   ],
   template: `
     <main class="page">
-      <section class="hero-card">
+      <section class="app-page-header">
         <span class="pill">Admin</span>
-        <h1>Operação do catálogo e moderação.</h1>
-        <p class="muted">APIs protegidas por role ADMIN no backend.</p>
+        <h1>Catálogo e moderação</h1>
+        <p class="app-muted">Gerencie álbuns, figurinhas e denúncias da comunidade.</p>
       </section>
 
       <mat-tab-group class="panel">
@@ -60,7 +60,7 @@ import { ApiService } from '../../core/api/api.service';
             </form>
 
             <div class="list">
-              <mat-card *ngFor="let album of albums()">
+              <mat-card class="outlined-card" *ngFor="let album of albums()">
                 <mat-card-content class="admin-row">
                   <div>
                     <span class="pill">{{ album.active ? 'Ativo' : 'Inativo' }}</span>
@@ -91,8 +91,8 @@ import { ApiService } from '../../core/api/api.service';
             <form [formGroup]="stickerForm" (ngSubmit)="saveSticker()" class="form-grid">
               <h2>{{ editingStickerId() ? 'Editar figurinha' : 'Nova figurinha' }}</h2>
               <mat-form-field>
-                <mat-label>Número</mat-label>
-                <input matInput formControlName="number" maxlength="20" />
+                <mat-label>Código</mat-label>
+                <input matInput formControlName="code" maxlength="20" />
               </mat-form-field>
               <mat-form-field>
                 <mat-label>Nome</mat-label>
@@ -111,11 +111,11 @@ import { ApiService } from '../../core/api/api.service';
             </form>
 
             <div class="list">
-              <mat-card *ngFor="let sticker of stickers()">
+              <mat-card class="outlined-card" *ngFor="let sticker of stickers()">
                 <mat-card-content class="admin-row">
                   <div>
                     <span class="pill">{{ sticker.active ? 'Ativa' : 'Inativa' }}</span>
-                    <h3>#{{ sticker.number }} — {{ sticker.name }}</h3>
+                    <h3>#{{ sticker.code }} — {{ sticker.name }}</h3>
                     <p class="muted">{{ sticker.description || 'Sem descrição' }}</p>
                   </div>
                   <div class="actions">
@@ -143,11 +143,11 @@ import { ApiService } from '../../core/api/api.service';
             </mat-form-field>
 
             <div class="list">
-              <mat-card *ngFor="let report of reports()">
+              <mat-card class="outlined-card" *ngFor="let report of reports()">
                 <mat-card-content>
-                  <span class="pill">{{ report.status }}</span>
-                  <h3>{{ report.reason }}</h3>
-                  <p class="muted">{{ report.description || 'Sem descrição' }}</p>
+                  <span class="pill">{{ reportStatusLabel(report.status) }}</span>
+                  <h3>{{ reportReasonLabel(report.reason) }}</h3>
+                  <p class="app-muted">{{ report.description || 'Sem descrição' }}</p>
                   <small>Denunciado: {{ report.reportedId }} · {{ report.createdAt | date: 'short' }}</small>
                 </mat-card-content>
               </mat-card>
@@ -197,7 +197,7 @@ export class AdminComponent implements OnInit {
   });
 
   readonly stickerForm = this.fb.nonNullable.group({
-    number: ['', [Validators.required, Validators.maxLength(20)]],
+    code: ['', [Validators.required, Validators.maxLength(20)]],
     name: ['', [Validators.required, Validators.maxLength(200)]],
     description: ['']
   });
@@ -273,7 +273,7 @@ export class AdminComponent implements OnInit {
     this.saving.set(true);
     const value = this.stickerForm.getRawValue();
     const payload = {
-      number: value.number,
+      code: value.code,
       name: value.name,
       description: value.description.trim() || null
     };
@@ -289,7 +289,7 @@ export class AdminComponent implements OnInit {
   editSticker(sticker: StickerResponse): void {
     this.editingStickerId.set(sticker.id);
     this.stickerForm.patchValue({
-      number: sticker.number,
+      code: sticker.code,
       name: sticker.name,
       description: sticker.description ?? ''
     });
@@ -297,7 +297,7 @@ export class AdminComponent implements OnInit {
 
   resetStickerForm(): void {
     this.editingStickerId.set(null);
-    this.stickerForm.reset({ number: '', name: '', description: '' });
+    this.stickerForm.reset({ code: '', name: '', description: '' });
   }
 
   setStickerActive(sticker: StickerResponse): void {
@@ -306,5 +306,22 @@ export class AdminComponent implements OnInit {
 
   loadReports(): void {
     this.api.reports(this.reportStatus()).subscribe((page) => this.reports.set(page.content));
+  }
+
+  reportStatusLabel(status: ReportStatus): string {
+    return {
+      PENDING: 'Pendente',
+      REVIEWED: 'Revisada',
+      DISMISSED: 'Dispensada'
+    }[status];
+  }
+
+  reportReasonLabel(reason: ReportReason): string {
+    return {
+      SPAM: 'Spam',
+      INAPPROPRIATE_CONTENT: 'Conteúdo inadequado',
+      HARASSMENT: 'Assédio',
+      OTHER: 'Outro motivo'
+    }[reason];
   }
 }

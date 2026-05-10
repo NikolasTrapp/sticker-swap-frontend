@@ -16,9 +16,22 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/oauth-callback.component').then((m) => m.OAuthCallbackComponent)
   },
   {
+    path: 'logout',
+    loadComponent: () => import('./features/auth/logout.component').then((m) => m.LogoutComponent)
+  },
+  {
+    path: 'logged-out',
+    loadComponent: () => import('./features/auth/logged-out.component').then((m) => m.LoggedOutComponent)
+  },
+  {
     path: 'email-confirmation',
     loadComponent: () =>
       import('./features/auth/email-confirmation.component').then((m) => m.EmailConfirmationComponent)
+  },
+  {
+    path: 'email-confirmation-sent',
+    loadComponent: () =>
+      import('./features/auth/email-confirmation-sent.component').then((m) => m.EmailConfirmationSentComponent)
   },
   {
     path: 'password-reset-request',

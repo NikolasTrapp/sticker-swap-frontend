@@ -8,10 +8,10 @@ import { RouterLink } from '@angular/router';
   imports: [MatButtonModule, RouterLink],
   template: `
     <main class="page">
-      <section class="hero-card">
-        <span class="pill danger">403</span>
+      <section class="app-page-header">
+        <span class="pill danger">Acesso restrito</span>
         <h1>Acesso restrito</h1>
-        <p class="muted">Esta área exige perfil administrativo.</p>
+        <p class="app-muted">Sua conta não tem permissão para acessar esta área.</p>
         <a mat-flat-button color="primary" routerLink="/dashboard">Voltar ao início</a>
       </section>
     </main>

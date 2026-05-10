@@ -3,6 +3,7 @@ import { Component, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -12,12 +13,13 @@ import { ApiService } from '../../core/api/api.service';
 @Component({
   selector: 'app-password-reset',
   standalone: true,
-  imports: [MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule, NgIf, ReactiveFormsModule, RouterLink],
+  imports: [MatButtonModule, MatCardModule, MatDividerModule, MatFormFieldModule, MatInputModule, NgIf, ReactiveFormsModule, RouterLink],
   template: `
-    <main class="page auth-simple">
-      <mat-card class="auth-card">
+    <main class="app-auth-page">
+      <mat-card class="auth-card outlined-card">
         <mat-card-header>
           <mat-card-title>Definir nova senha</mat-card-title>
+          <mat-card-subtitle>Escolha uma senha com pelo menos 8 caracteres.</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
@@ -29,14 +31,24 @@ import { ApiService } from '../../core/api/api.service';
               Atualizar senha
             </button>
           </form>
-          <p class="muted" *ngIf="done()">Senha atualizada.</p>
+          <p class="success" *ngIf="done()">Senha atualizada. Você já pode entrar novamente.</p>
         </mat-card-content>
+        <mat-divider />
         <mat-card-actions align="end">
           <a mat-button routerLink="/login">Entrar</a>
         </mat-card-actions>
       </mat-card>
     </main>
-  `
+  `,
+  styles: [
+    `
+      .auth-card {
+        margin: auto;
+        max-width: 520px;
+        width: 100%;
+      }
+    `
+  ]
 })
 export class PasswordResetComponent {
   readonly done = signal(false);

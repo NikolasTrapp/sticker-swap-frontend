@@ -22,9 +22,9 @@ const DEFAULT_CONFIG: RuntimeConfig = {
   oidc: {
     authority: 'http://localhost:8080',
     clientId: 'sticker-swap-web',
-    scope: 'openid profile api',
+    scope: 'openid profile api offline_access',
     redirectUrl: 'http://localhost:4200/oauth/callback',
-    postLogoutRedirectUri: 'http://localhost:4200'
+    postLogoutRedirectUri: 'http://localhost:4200/logged-out'
   }
 };
 

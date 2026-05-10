@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { RouterLink } from '@angular/router';
@@ -14,6 +15,7 @@ import { AuthFacade } from '../../core/auth/auth.facade';
   imports: [
     MatButtonModule,
     MatCardModule,
+    MatDividerModule,
     MatFormFieldModule,
     MatInputModule,
     NgIf,
@@ -24,16 +26,16 @@ import { AuthFacade } from '../../core/auth/auth.facade';
     <main class="auth-page">
       <section class="auth-hero">
         <span class="pill">Copa 2026</span>
-        <h1>Troque figurinhas com contexto, segurança e conversa direta.</h1>
+        <h1>Organize suas figurinhas e encontre trocas reais.</h1>
         <p>
-          Entre para buscar quem tem a figurinha que falta, organizar repetidas e abrir chats de troca com intenção clara.
+          Entre para atualizar sua coleção, encontrar quem tem a figurinha que falta e conversar com contexto.
         </p>
       </section>
 
-      <mat-card class="auth-card">
+      <mat-card class="auth-card outlined-card">
         <mat-card-header>
           <mat-card-title>Entrar</mat-card-title>
-          <mat-card-subtitle>Login via OAuth2 Authorization Code + PKCE</mat-card-subtitle>
+          <mat-card-subtitle>Acesse sua conta para continuar suas trocas.</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
@@ -54,6 +56,7 @@ import { AuthFacade } from '../../core/auth/auth.facade';
             </button>
           </form>
         </mat-card-content>
+        <mat-divider />
         <mat-card-actions align="end">
           <a mat-button routerLink="/password-reset-request">Esqueci minha senha</a>
           <a mat-button routerLink="/register">Criar conta</a>
@@ -66,7 +69,7 @@ import { AuthFacade } from '../../core/auth/auth.facade';
       .auth-page {
         align-items: center;
         display: grid;
-        gap: 1.25rem;
+        gap: 1rem;
         min-height: 100vh;
         padding: 1rem;
       }
@@ -82,9 +85,9 @@ import { AuthFacade } from '../../core/auth/auth.facade';
       }
 
       .auth-hero h1 {
-        font-size: clamp(2.4rem, 10vw, 5rem);
-        letter-spacing: -0.07em;
-        line-height: 0.9;
+        font-size: clamp(2rem, 11vw, 4.25rem);
+        letter-spacing: 0;
+        line-height: 0.96;
         margin: 1rem 0;
       }
 
@@ -96,7 +99,6 @@ import { AuthFacade } from '../../core/auth/auth.facade';
 
       .auth-card {
         animation: enter 650ms ease-out both;
-        border-radius: var(--radius);
         width: 100%;
       }
 

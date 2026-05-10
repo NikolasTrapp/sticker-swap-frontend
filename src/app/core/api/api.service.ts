@@ -4,10 +4,13 @@ import { Observable } from 'rxjs';
 import { RuntimeConfigService } from '../config/runtime-config.service';
 import {
   AlbumResponse,
+  CollectionFilter,
+  CollectionStickerResponse,
   ConversationResponse,
   HolderResponse,
   MessageResponse,
   MyProfileResponse,
+  NotificationResponse,
   Page,
   PublicProfileResponse,
   RepeatedStickerResponse,
@@ -52,9 +55,13 @@ export class ApiService {
     });
   }
 
-  stickers(albumId: string, page = 0, size = 300): Observable<Page<StickerResponse>> {
+  stickers(
+    albumId: string,
+    options: { q?: string | null; page?: number; size?: number } = {}
+  ): Observable<Page<StickerResponse>> {
+    const { q = null, page = 0, size = 300 } = options;
     return this.http.get<Page<StickerResponse>>(this.config.apiUrl(`/albums/${albumId}/stickers`), {
-      params: this.params({ page, size, sort: 'number' })
+      params: this.params({ q, page, size, sort: 'code' })
     });
   }
 
@@ -74,6 +81,16 @@ export class ApiService {
     return this.http.get<RepeatedStickerResponse[]>(
       this.config.apiUrl(`/me/albums/${albumId}/repeated-stickers`)
     );
+  }
+
+  collection(
+    albumId: string,
+    options: { q?: string | null; filter?: CollectionFilter; page?: number; size?: number } = {}
+  ): Observable<Page<CollectionStickerResponse>> {
+    const { q = null, filter = 'ALL', page = 0, size = 25 } = options;
+    return this.http.get<Page<CollectionStickerResponse>>(this.config.apiUrl(`/me/albums/${albumId}/collection`), {
+      params: this.params({ q, filter, page, size, sort: 'code' })
+    });
   }
 
   setRepeated(stickerId: string, quantity: number): Observable<RepeatedStickerResponse> {
@@ -123,6 +140,26 @@ export class ApiService {
     });
   }
 
+  notifications(): Observable<NotificationResponse[]> {
+    return this.http.get<NotificationResponse[]>(this.config.apiUrl('/notifications'));
+  }
+
+  unreadCount(): Observable<{ count: number }> {
+    return this.http.get<{ count: number }>(this.config.apiUrl('/notifications/unread-count'));
+  }
+
+  markNotificationRead(id: string): Observable<void> {
+    return this.http.put<void>(this.config.apiUrl(`/notifications/${id}/read`), {});
+  }
+
+  markAllNotificationsRead(): Observable<void> {
+    return this.http.put<void>(this.config.apiUrl('/notifications/read-all'), {});
+  }
+
+  markConversationNotificationsRead(conversationId: string): Observable<void> {
+    return this.http.put<void>(this.config.apiUrl(`/chats/${conversationId}/notifications/read`), {});
+  }
+
   blockUser(userId: string): Observable<void> {
     return this.http.put<void>(this.config.apiUrl(`/users/${userId}/block`), {});
   }
@@ -164,20 +201,20 @@ export class ApiService {
 
   createSticker(
     albumId: string,
-    payload: { number: string; name: string; description?: string | null }
+    payload: { code: string; name: string; description?: string | null }
   ): Observable<StickerResponse> {
     return this.http.post<StickerResponse>(this.config.apiUrl(`/admin/albums/${albumId}/stickers`), payload);
   }
 
   adminStickers(albumId: string, page = 0, size = 500): Observable<Page<StickerResponse>> {
     return this.http.get<Page<StickerResponse>>(this.config.apiUrl(`/admin/albums/${albumId}/stickers`), {
-      params: this.params({ page, size, sort: 'number' })
+      params: this.params({ page, size, sort: 'code' })
     });
   }
 
   updateSticker(
     stickerId: string,
-    payload: { number?: string | null; name?: string | null; description?: string | null }
+    payload: { code?: string | null; name?: string | null; description?: string | null }
   ): Observable<StickerResponse> {
     return this.http.put<StickerResponse>(this.config.apiUrl(`/admin/stickers/${stickerId}`), payload);
   }

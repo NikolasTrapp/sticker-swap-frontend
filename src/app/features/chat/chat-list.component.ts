@@ -12,44 +12,31 @@ import { ApiService } from '../../core/api/api.service';
   imports: [DatePipe, MatButtonModule, MatCardModule, NgFor, NgIf, RouterLink],
   template: `
     <main class="page">
-      <section class="hero-card">
+      <section class="app-page-header">
         <span class="pill">Chat</span>
-        <h1>Conversas iniciadas por intenção de troca.</h1>
-        <p class="muted">O sistema não confirma a troca física. A negociação acontece entre os usuários.</p>
+        <h1>Conversas de troca</h1>
+        <p class="app-muted">Combine detalhes com outros colecionadores e mantenha o contexto da figurinha.</p>
       </section>
 
       <section class="list">
-        <mat-card *ngFor="let chat of conversations()">
-          <mat-card-content class="chat-row">
-            <div>
-              <h3>{{ chat.otherNickname || 'Colecionador' }}</h3>
-              <p class="muted">
-                #{{ chat.stickerNumber || '-' }} {{ chat.stickerName || 'Sem figurinha vinculada' }} ·
-                {{ chat.updatedAt | date: 'short' }}
-              </p>
-            </div>
-            <a mat-flat-button color="primary" [routerLink]="['/chats', chat.conversationId]">Abrir</a>
+        <mat-card class="outlined-card" *ngFor="let chat of conversations()">
+          <mat-card-header>
+            <mat-card-title>{{ chat.otherNickname || 'Colecionador' }}</mat-card-title>
+            <mat-card-subtitle>
+              #{{ chat.stickerNumber || '-' }} {{ chat.stickerName || 'Sem figurinha vinculada' }}
+            </mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="app-muted">Última atividade: {{ chat.updatedAt | date: 'short' }}</p>
           </mat-card-content>
+          <mat-card-actions align="end">
+            <a mat-flat-button color="primary" [routerLink]="['/chats', chat.conversationId]">Abrir</a>
+          </mat-card-actions>
         </mat-card>
         <div class="empty" *ngIf="!conversations().length">Nenhuma conversa ainda. Busque uma figurinha e clique em “Tenho interesse”.</div>
       </section>
     </main>
-  `,
-  styles: [
-    `
-      .chat-row {
-        align-items: center;
-        display: grid;
-        gap: 1rem;
-      }
-
-      @media (min-width: 720px) {
-        .chat-row {
-          grid-template-columns: 1fr auto;
-        }
-      }
-    `
-  ]
+  `
 })
 export class ChatListComponent implements OnInit {
   readonly conversations = signal<ConversationResponse[]>([]);

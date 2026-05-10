@@ -7,10 +7,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { MessageResponse } from '../../core/api/api.types';
+import { ConversationResponse, MessageResponse } from '../../core/api/api.types';
 import { ApiService } from '../../core/api/api.service';
 import { AuthFacade } from '../../core/auth/auth.facade';
 import { ChatRealtimeService } from '../../core/realtime/chat-realtime.service';
+import { NotificationService } from '../../core/notifications/notification.service';
 
 @Component({
   selector: 'app-chat-room',
@@ -29,11 +30,12 @@ import { ChatRealtimeService } from '../../core/realtime/chat-realtime.service';
   ],
   template: `
     <main class="page chat-page">
-      <section class="panel">
+      <section class="app-page-header chat-header">
         <div class="section-title">
           <div>
-            <h1>Conversa</h1>
-            <p class="muted">Mensagens em tempo real via STOMP/WebSocket.</p>
+            <span class="pill">Chat</span>
+            <h1>{{ conversationTitle() }}</h1>
+            <p class="app-muted">{{ conversationSubtitle() }}</p>
           </div>
           <a mat-button routerLink="/chats">Voltar</a>
         </div>
@@ -54,7 +56,7 @@ import { ChatRealtimeService } from '../../core/realtime/chat-realtime.service';
       <form [formGroup]="form" (ngSubmit)="send()" class="composer panel">
         <mat-form-field class="full-width">
           <mat-label>Mensagem</mat-label>
-          <input matInput formControlName="body" maxlength="2000" />
+          <textarea matInput formControlName="body" maxlength="2000" rows="2"></textarea>
         </mat-form-field>
         <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Enviar</button>
       </form>
@@ -64,6 +66,10 @@ import { ChatRealtimeService } from '../../core/realtime/chat-realtime.service';
     `
       .chat-page {
         max-width: 900px;
+      }
+
+      .chat-header h1 {
+        font-size: clamp(1.6rem, 7vw, 2.4rem);
       }
 
       .messages {
@@ -107,13 +113,14 @@ import { ChatRealtimeService } from '../../core/realtime/chat-realtime.service';
         bottom: 5rem;
         display: grid;
         gap: 0.75rem;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr;
         position: sticky;
       }
 
       @media (min-width: 920px) {
         .composer {
           bottom: 1rem;
+          grid-template-columns: 1fr auto;
         }
       }
     `
@@ -121,6 +128,7 @@ import { ChatRealtimeService } from '../../core/realtime/chat-realtime.service';
 })
 export class ChatRoomComponent implements OnInit, OnDestroy {
   readonly messages = signal<MessageResponse[]>([]);
+  readonly conversation = signal<ConversationResponse | null>(null);
   readonly form = this.fb.nonNullable.group({
     body: ['', [Validators.required, Validators.maxLength(2000)]]
   });
@@ -133,7 +141,8 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     readonly auth: AuthFacade,
     private readonly fb: FormBuilder,
     private readonly realtime: ChatRealtimeService,
-    private readonly route: ActivatedRoute
+    private readonly route: ActivatedRoute,
+    private readonly notifications: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -143,10 +152,15 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     }
     this.conversationId = id;
     this.api.messages(id).subscribe((page) => this.messages.set(page.content));
+    this.api.conversations().subscribe((items) => {
+      this.conversation.set(items.find((item) => item.conversationId === id) ?? null);
+    });
     this.realtime.connect(id);
     this.realtimeSubscription = this.realtime.messages$.subscribe((message) => {
       this.messages.update((items) => [...items, message]);
     });
+    this.api.markConversationNotificationsRead(id).subscribe();
+    this.notifications.markConversationReadLocally(id);
   }
 
   ngOnDestroy(): void {
@@ -164,5 +178,17 @@ export class ChatRoomComponent implements OnInit, OnDestroy {
     }
     this.realtime.send(this.conversationId, body);
     this.form.reset();
+  }
+
+  conversationTitle(): string {
+    return this.conversation()?.otherNickname || 'Conversa';
+  }
+
+  conversationSubtitle(): string {
+    const conversation = this.conversation();
+    if (!conversation?.stickerNumber) {
+      return 'Combine os detalhes da troca diretamente com o colecionador.';
+    }
+    return `Figurinha #${conversation.stickerNumber} - ${conversation.stickerName || 'sem nome'}`;
   }
 }

@@ -12,16 +12,18 @@ import { ApiService } from '../../core/api/api.service';
   imports: [MatButtonModule, MatCardModule, NgIf, RouterLink],
   template: `
     <main class="page">
-      <mat-card class="hero-card" *ngIf="profile() as profile">
+      <mat-card class="outlined-card" *ngIf="profile() as profile">
+        <mat-card-header>
+          <mat-card-title>{{ profile.nickname || 'Colecionador' }}</mat-card-title>
+          <mat-card-subtitle>Perfil público</mat-card-subtitle>
+        </mat-card-header>
         <mat-card-content>
-          <span class="pill">Perfil público</span>
-          <h1>{{ profile.nickname || 'Colecionador' }}</h1>
-          <p class="muted" *ngIf="profile.city || profile.state">{{ profile.city }} {{ profile.state }}</p>
-          <p class="muted" *ngIf="!profile.city && !profile.state">Localização pública não informada.</p>
-          <div class="actions">
-            <a mat-flat-button color="primary" routerLink="/search">Voltar à busca</a>
-          </div>
+          <p class="app-muted" *ngIf="profile.city || profile.state">{{ profile.city }} {{ profile.state }}</p>
+          <p class="app-muted" *ngIf="!profile.city && !profile.state">Localização pública não informada.</p>
         </mat-card-content>
+        <mat-card-actions align="end">
+          <a mat-flat-button color="primary" routerLink="/search">Voltar à busca</a>
+        </mat-card-actions>
       </mat-card>
     </main>
   `

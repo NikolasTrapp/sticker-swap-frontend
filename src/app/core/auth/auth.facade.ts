@@ -63,9 +63,21 @@ export class AuthFacade {
   }
 
   logout(): void {
+    this.oidc.logoff().subscribe(() => this.logoutLocal());
+  }
+
+  logoutAndRevoke(): Observable<unknown> {
+    this.busy.set(true);
+    return this.oidc.logoffAndRevokeTokens().pipe(
+      tap(() => this.logoutLocal()),
+      finalize(() => this.busy.set(false))
+    );
+  }
+
+  logoutLocal(): void {
     this.profile.set(null);
     this.authenticated.set(false);
-    this.oidc.logoff().subscribe();
+    this.oidc.logoffLocal();
   }
 
   accessToken(): Observable<string> {

@@ -37,7 +37,7 @@ export interface AlbumResponse {
 export interface StickerResponse {
   id: string;
   albumId: string;
-  number: string;
+  code: string;
   name: string;
   description: string | null;
   active: boolean;
@@ -81,6 +81,18 @@ export interface WantedStickerResponse {
   warning: string | null;
 }
 
+export type CollectionFilter = 'ALL' | 'REPEATED' | 'WANTED' | 'CONFLICT';
+
+export interface CollectionStickerResponse {
+  stickerId: string;
+  code: string;
+  name: string;
+  description: string | null;
+  repeatedQuantity: number;
+  wanted: boolean;
+  warning: string | null;
+}
+
 export interface HolderResponse {
   userId: string;
   nickname: string | null;
@@ -102,7 +114,7 @@ export interface ConversationResponse {
   updatedAt: string;
 }
 
-export type MessageType = 'USER_MESSAGE' | 'SYSTEM_INTENT';
+export type MessageType = 'TEXT' | 'USER_MESSAGE' | 'SYSTEM_INTENT';
 
 export interface MessageResponse {
   messageId: string;
@@ -111,6 +123,21 @@ export interface MessageResponse {
   type: MessageType;
   body: string;
   sentAt: string;
+}
+
+export type NotificationType = 'NEW_INTEREST' | 'NEW_MESSAGE';
+
+export interface NotificationResponse {
+  notificationId: string;
+  type: NotificationType;
+  conversationId: string;
+  actorUserId: string | null;
+  actorNickname: string | null;
+  stickerId: string | null;
+  stickerCode: string | null;
+  stickerName: string | null;
+  read: boolean;
+  createdAt: string;
 }
 
 export type ReportReason = 'SPAM' | 'INAPPROPRIATE_CONTENT' | 'HARASSMENT' | 'OTHER';

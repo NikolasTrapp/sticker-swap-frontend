@@ -24,7 +24,7 @@ import { AuthFacade } from '../../core/auth/auth.facade';
   ]
 })
 export class OAuthCallbackComponent implements OnInit {
-  readonly message = signal('Finalizando autenticação...');
+  readonly message = signal('Finalizando entrada...');
 
   constructor(
     private readonly auth: AuthFacade,
@@ -33,7 +33,7 @@ export class OAuthCallbackComponent implements OnInit {
 
   ngOnInit(): void {
     this.auth.checkAuth().subscribe((authenticated) => {
-      this.message.set(authenticated ? 'Autenticado.' : 'Não foi possível autenticar.');
+      this.message.set(authenticated ? 'Entrada concluída.' : 'Não foi possível entrar.');
       void this.router.navigateByUrl(authenticated ? '/dashboard' : '/login');
     });
   }

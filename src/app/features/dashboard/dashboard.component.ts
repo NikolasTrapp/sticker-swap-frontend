@@ -13,58 +13,107 @@ import { ApiService } from '../../core/api/api.service';
   imports: [DatePipe, MatButtonModule, MatCardModule, NgIf, RouterLink],
   template: `
     <main class="page">
-      <section class="hero-card">
-        <span class="pill">MVP operacional</span>
-        <h1>Encontre trocas reais sem transformar isso em marketplace.</h1>
-        <p class="muted">
-          Organize suas repetidas, marque faltantes, busque colecionadores por álbum e inicie conversas com contexto.
-        </p>
-        <div class="actions">
+      <section class="app-page-header dashboard-header">
+        <div>
+          <span class="pill">Início</span>
+          <h1>Suas trocas em um só lugar.</h1>
+          <p class="app-muted">
+            Atualize sua coleção, encontre quem tem as figurinhas faltantes e continue suas conversas.
+          </p>
+        </div>
+        <div class="app-actions">
           <a mat-flat-button color="primary" routerLink="/search">Buscar figurinha</a>
           <a mat-stroked-button routerLink="/collection">Atualizar coleção</a>
         </div>
       </section>
 
-      <section class="grid three">
-        <mat-card class="metric-card">
-          <mat-card-title>Perfil</mat-card-title>
+      <section class="app-grid three">
+        <mat-card class="outlined-card metric-card">
+          <mat-card-header>
+            <mat-card-title>Perfil</mat-card-title>
+            <mat-card-subtitle>{{ profile()?.city || 'Cidade não informada' }} {{ profile()?.state || '' }}</mat-card-subtitle>
+          </mat-card-header>
           <mat-card-content>
-            <strong>{{ profile()?.nickname || 'Sem nickname' }}</strong>
-            <p class="muted">{{ profile()?.city || 'Cidade não informada' }} {{ profile()?.state || '' }}</p>
+            <strong class="metric-value">{{ profile()?.nickname || 'Sem nickname' }}</strong>
+          </mat-card-content>
+          <mat-card-actions align="end">
             <a mat-button routerLink="/profile">Editar perfil</a>
-          </mat-card-content>
+          </mat-card-actions>
         </mat-card>
 
-        <mat-card class="metric-card">
-          <mat-card-title>Álbuns ativos</mat-card-title>
+        <mat-card class="outlined-card metric-card">
+          <mat-card-header>
+            <mat-card-title>Álbuns ativos</mat-card-title>
+            <mat-card-subtitle>Catálogos disponíveis para busca e coleção</mat-card-subtitle>
+          </mat-card-header>
           <mat-card-content>
-            <strong>{{ albums().length }}</strong>
-            <p class="muted">Catálogos disponíveis para busca e coleção.</p>
+            <strong class="metric-value">{{ albums().length }}</strong>
+          </mat-card-content>
+          <mat-card-actions align="end">
             <a mat-button routerLink="/catalog">Ver catálogo</a>
-          </mat-card-content>
+          </mat-card-actions>
         </mat-card>
 
-        <mat-card class="metric-card">
-          <mat-card-title>Conversas</mat-card-title>
+        <mat-card class="outlined-card metric-card">
+          <mat-card-header>
+            <mat-card-title>Conversas</mat-card-title>
+            <mat-card-subtitle *ngIf="chats()[0]?.updatedAt; else noActivity">
+              Última atividade: {{ chats()[0]?.updatedAt | date: 'short' }}
+            </mat-card-subtitle>
+            <ng-template #noActivity>
+              <mat-card-subtitle>Sem conversas ativas</mat-card-subtitle>
+            </ng-template>
+          </mat-card-header>
           <mat-card-content>
-            <strong>{{ chats().length }}</strong>
-            <p class="muted">Última atividade: {{ chats()[0]?.updatedAt | date: 'short' }}</p>
-            <a mat-button routerLink="/chats">Abrir chats</a>
+            <strong class="metric-value">{{ chats().length }}</strong>
           </mat-card-content>
+          <mat-card-actions align="end">
+            <a mat-button routerLink="/chats">Abrir chats</a>
+          </mat-card-actions>
         </mat-card>
       </section>
 
-      <section class="panel" *ngIf="!profile()?.nickname">
-        <div class="section-title">
+      <mat-card class="outlined-card" *ngIf="!profile()?.nickname">
+        <mat-card-content class="app-section-header">
           <div>
             <h2>Complete seu perfil</h2>
-            <p class="muted">O nickname é necessário para aparecer com clareza em buscas e chats.</p>
+            <p class="app-muted">Escolha um nickname para aparecer melhor nas buscas e conversas.</p>
           </div>
           <a mat-flat-button color="primary" routerLink="/profile">Configurar</a>
-        </div>
-      </section>
+        </mat-card-content>
+      </mat-card>
     </main>
-  `
+  `,
+  styles: [
+    `
+      .dashboard-header {
+        align-items: start;
+      }
+
+      .metric-card {
+        display: flex;
+        flex-direction: column;
+        min-height: 172px;
+      }
+
+      .metric-card mat-card-content {
+        flex: 1;
+      }
+
+      .metric-value {
+        display: block;
+        font-size: 2rem;
+        line-height: 1.1;
+        margin-top: 0.5rem;
+      }
+
+      @media (min-width: 760px) {
+        .dashboard-header {
+          grid-template-columns: minmax(0, 1fr) auto;
+        }
+      }
+    `
+  ]
 })
 export class DashboardComponent implements OnInit {
   readonly profile = signal<MyProfileResponse | null>(null);
