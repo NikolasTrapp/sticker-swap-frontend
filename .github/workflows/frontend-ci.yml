@@ -14,10 +14,10 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: sticker-swap-frontend/package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Install
-        working-directory: sticker-swap-frontend
+        working-directory: ./sticker-swap-frontend
         run: npm ci
       - name: Build
-        working-directory: sticker-swap-frontend
+        working-directory: ./sticker-swap-frontend
         run: npm run build:prod
