@@ -1,13 +1,6 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, computed, signal } from '@angular/core';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
-import { Observable, finalize, map, switchMap, tap } from 'rxjs';
-import { RuntimeConfigService } from '../config/runtime-config.service';
-
-interface CsrfResponse {
-  token: string;
-  headerName: string;
-}
+import { Observable, finalize, map, tap } from 'rxjs';
 
 export interface AuthProfile {
   sub: string;
@@ -22,11 +15,7 @@ export class AuthFacade {
   readonly busy = signal(false);
   readonly isAdmin = computed(() => this.profile()?.role === 'ADMIN');
 
-  constructor(
-    private readonly http: HttpClient,
-    private readonly oidc: OidcSecurityService,
-    private readonly config: RuntimeConfigService
-  ) {}
+  constructor(private readonly oidc: OidcSecurityService) {}
 
   checkAuth(): Observable<boolean> {
     return this.oidc.checkAuth().pipe(
@@ -36,26 +25,6 @@ export class AuthFacade {
       }),
       map((result: { isAuthenticated: boolean }) => result.isAuthenticated)
     );
-  }
-
-  login(email: string, password: string): Observable<void> {
-    this.busy.set(true);
-    return this.http
-      .get<CsrfResponse>(this.config.authUrl('/oauth2/csrf'), { withCredentials: true })
-      .pipe(
-        switchMap((csrf) =>
-          this.http.post<void>(
-            this.config.authUrl('/oauth2/login'),
-            { email, password },
-            {
-              headers: new HttpHeaders({ [csrf.headerName || 'X-XSRF-TOKEN']: csrf.token }),
-              withCredentials: true
-            }
-          )
-        ),
-        tap(() => this.oidc.authorize()),
-        finalize(() => this.busy.set(false))
-      );
   }
 
   startLogin(): void {

@@ -46,10 +46,6 @@ function errorMessage(error: HttpErrorResponse, url: string): string {
     return `${field}: ${friendlyValidation(firstError?.message)}`;
   }
 
-  if (path.includes('/oauth2/login') && error.status === 401) {
-    return 'E-mail ou senha incorretos.';
-  }
-
   if (path.includes('/auth/register') && error.status === 409) {
     return 'Este e-mail já está cadastrado.';
   }
