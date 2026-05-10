@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom } from '@angular/core';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { MatPaginatorIntl } from '@angular/material/paginator';
@@ -30,12 +30,6 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     importProvidersFrom(MatSnackBarModule),
     {
-      provide: APP_INITIALIZER,
-      multi: true,
-      deps: [RuntimeConfigService],
-      useFactory: (runtimeConfig: RuntimeConfigService) => () => runtimeConfig.load()
-    },
-    {
       provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
       useValue: { appearance: 'outline' }
     },
@@ -52,8 +46,8 @@ export const appConfig: ApplicationConfig = {
           const origin = window.location.origin;
           return new StsConfigStaticLoader({
             authority: config.oidc.authority,
-            redirectUrl: `${origin}/oauth/callback`,
-            postLogoutRedirectUri: `${origin}/logged-out`,
+            redirectUrl: config.oidc.redirectUrl,
+            postLogoutRedirectUri: config.oidc.postLogoutRedirectUri,
             clientId: config.oidc.clientId,
             scope: config.oidc.scope,
             responseType: 'code',

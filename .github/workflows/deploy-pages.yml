@@ -35,12 +35,9 @@ jobs:
         # O base-href pega o nome do seu repositório dinamicamente. Ex: /sticker-swap-frontend/
         run: npx ng build --configuration production --base-href /${{ github.event.repository.name }}/
 
-      - name: Prepare prod config and SPA routing
+      - name: Prepare SPA routing
         run: |
-          # 1. Substitui o config.json pelo config.prod.json
-          cp dist/sticker-swap-frontend/browser/assets/config.prod.json dist/sticker-swap-frontend/browser/assets/config.json
-          
-          # 2. Copia index para 404 para suportar as rotas no GitHub Pages
+          # Copia index para 404 para suportar as rotas no GitHub Pages
           cp dist/sticker-swap-frontend/browser/index.html dist/sticker-swap-frontend/browser/404.html
 
       - name: Upload artifact

@@ -1,6 +1,5 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface RuntimeConfig {
   apiBaseUrl: string;
@@ -15,47 +14,23 @@ export interface RuntimeConfig {
   };
 }
 
-const DEFAULT_CONFIG: RuntimeConfig = {
-  apiBaseUrl: 'http://localhost:8080',
-  authBaseUrl: 'http://localhost:8080',
-  wsUrl: 'ws://localhost:8080/ws',
-  oidc: {
-    authority: 'http://localhost:8080',
-    clientId: 'sticker-swap-web',
-    scope: 'openid profile api offline_access',
-    redirectUrl: 'http://localhost:4200/oauth/callback',
-    postLogoutRedirectUri: 'http://localhost:4200/logged-out'
-  }
-};
-
 @Injectable({ providedIn: 'root' })
 export class RuntimeConfigService {
-  private runtimeConfig: RuntimeConfig = DEFAULT_CONFIG;
-
-  constructor(private readonly http: HttpClient) {}
-
-  async load(): Promise<void> {
-    try {
-      this.runtimeConfig = await firstValueFrom(this.http.get<RuntimeConfig>('assets/config.json'));
-    } catch {
-      this.runtimeConfig = DEFAULT_CONFIG;
-    }
-  }
 
   snapshot(): RuntimeConfig {
-    return this.runtimeConfig;
+    return environment;
   }
 
   apiUrl(path: string): string {
-    return joinUrl(this.runtimeConfig.apiBaseUrl, path);
+    return joinUrl(environment.apiBaseUrl, path);
   }
 
   authUrl(path: string): string {
-    return joinUrl(this.runtimeConfig.authBaseUrl, path);
+    return joinUrl(environment.authBaseUrl, path);
   }
 
   isApiRequest(url: string): boolean {
-    return url.startsWith(this.runtimeConfig.apiBaseUrl);
+    return url.startsWith(environment.apiBaseUrl);
   }
 }
 

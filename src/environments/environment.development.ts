@@ -1,0 +1,13 @@
+export const environment = {
+  production: false,
+  apiBaseUrl: 'http://localhost:8080',
+  authBaseUrl: 'http://localhost:8080',
+  wsUrl: 'ws://localhost:8080/ws',
+  oidc: {
+    authority: 'http://localhost:8080',
+    clientId: 'sticker-swap-web',
+    scope: 'openid profile api offline_access',
+    redirectUrl: 'http://localhost:4200/oauth/callback',
+    postLogoutRedirectUri: 'http://localhost:4200/logged-out'
+  }
+};
