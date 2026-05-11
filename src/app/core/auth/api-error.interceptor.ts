@@ -67,6 +67,10 @@ function errorMessage(error: HttpErrorResponse, url: string): string {
     return 'Este link de recuperação expirou ou já foi usado.';
   }
 
+  if (path.includes('/auth/password-reset-requests') && error.status === 404) {
+    return 'Não encontramos uma conta com esse e-mail.';
+  }
+
   if (error.status === 401) {
     return 'Sua sessão expirou. Entre novamente.';
   }

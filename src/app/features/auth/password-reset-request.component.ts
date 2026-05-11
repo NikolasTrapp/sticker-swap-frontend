@@ -19,7 +19,7 @@ import { ApiService } from '../../core/api/api.service';
       <mat-card class="auth-card outlined-card">
         <mat-card-header>
           <mat-card-title>Recuperar senha</mat-card-title>
-          <mat-card-subtitle>Informe seu e-mail para receber as instruções de recuperação.</mat-card-subtitle>
+          <mat-card-subtitle>Informe o e-mail cadastrado para receber o link de recuperação.</mat-card-subtitle>
         </mat-card-header>
         <mat-card-content>
           <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
@@ -27,11 +27,11 @@ import { ApiService } from '../../core/api/api.service';
               <mat-label>E-mail</mat-label>
               <input matInput type="email" formControlName="email" />
             </mat-form-field>
-            <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || saving()">
-              Enviar instruções
+            <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || saving() || done()">
+              {{ done() ? 'Link enviado' : 'Enviar instruções' }}
             </button>
           </form>
-          <p class="success" *ngIf="done()">Se a conta existir, as instruções serão enviadas em instantes.</p>
+          <p class="success" *ngIf="done()">Enviamos um link para redefinir sua senha. Confira sua caixa de entrada e spam.</p>
         </mat-card-content>
         <mat-divider />
         <mat-card-actions align="end">
@@ -46,6 +46,10 @@ import { ApiService } from '../../core/api/api.service';
         margin: auto;
         max-width: 520px;
         width: 100%;
+      }
+
+      .success {
+        margin-top: 1rem;
       }
     `
   ]
@@ -66,10 +70,14 @@ export class PasswordResetRequestComponent {
     if (this.form.invalid) {
       return;
     }
+    this.done.set(false);
     this.saving.set(true);
     this.api
       .requestPasswordReset(this.form.getRawValue().email)
       .pipe(finalize(() => this.saving.set(false)))
-      .subscribe(() => this.done.set(true));
+      .subscribe(() => {
+        this.done.set(true);
+        this.form.disable();
+      });
   }
 }
