@@ -5,14 +5,20 @@ on:
   push:
     branches: [main]
 
+permissions:
+  checks: write
+  contents: read
+  issues: write
+  pull-requests: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 24
           cache: npm
@@ -24,12 +30,54 @@ jobs:
       - name: Build
         run: npm run build:prod
       - name: Cache SonarQube packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
       - name: SonarQube Scan
+        id: sonar
         uses: SonarSource/sonarqube-scan-action@v8
         env:
+          GITHUB_TOKEN: ${{ github.token }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Comment SonarQube report on PR
+        if: always() && github.event_name == 'pull_request' && steps.sonar.outcome != 'skipped'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SONAR_OUTCOME: ${{ steps.sonar.outcome }}
+          SONAR_PROJECT_KEY: NikolasTrapp_sticker-swap-frontend
+        run: |
+          set -euo pipefail
+
+          sonar_url="https://sonarcloud.io/dashboard?id=${SONAR_PROJECT_KEY}&pullRequest=${PR_NUMBER}"
+          if [ "${SONAR_OUTCOME}" = "success" ]; then
+            status="PASSED"
+            marker="[OK]"
+          else
+            status="FAILED"
+            marker="[FAIL]"
+          fi
+
+          body="$(mktemp)"
+          cat > "${body}" <<EOF
+          <!-- sonar-report -->
+          ## SonarQube Cloud
+
+          | Item | Resultado |
+          | --- | --- |
+          | Quality Gate | ${marker} ${status} |
+          | Relatório | [Abrir no SonarQube Cloud](${sonar_url}) |
+          EOF
+
+          comment_id="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+            --jq '.[] | select(.body | contains("<!-- sonar-report -->")) | .id' | head -n 1)"
+
+          if [ -n "${comment_id}" ]; then
+            gh api --method PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${comment_id}" \
+              --raw-field body="$(cat "${body}")"
+          else
+            gh api --method POST "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+              --raw-field body="$(cat "${body}")"
+          fi
