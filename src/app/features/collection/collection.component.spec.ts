@@ -258,6 +258,25 @@ describe('CollectionComponent', () => {
       expect(component.quickWantedControl.value).toBeFalse();
       expect(api.collection).toHaveBeenCalledWith('album-1', { q: '', filter: 'ALL', page: 0, size: 25 });
     });
+
+    it('Então registra somente faltante quando quantidade rápida é zero', () => {
+      // Arrange
+      component.selectedAlbumId.set('album-1');
+      component.quickCodeControl.setValue('001');
+      component.quickQuantityControl.setValue(0);
+      component.quickWantedControl.setValue(true);
+      api.collection.calls.reset();
+
+      // Act
+      component.saveQuickEntry();
+
+      // Assert
+      expect(api.stickers).toHaveBeenCalledWith('album-1', { q: '001', page: 0, size: 10 });
+      expect(api.setRepeated).not.toHaveBeenCalled();
+      expect(api.setWanted).toHaveBeenCalledOnceWith('sticker-1');
+      expect(component.savingQuick()).toBeFalse();
+      expect(api.collection).toHaveBeenCalledWith('album-1', { q: '', filter: 'ALL', page: 0, size: 25 });
+    });
   });
 
   describe('Dado busca de titulares', () => {

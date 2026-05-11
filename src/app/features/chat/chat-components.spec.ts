@@ -227,6 +227,25 @@ describe('ChatRoomComponent', () => {
       expect(component.conversationTitle()).toBe('Conversa');
       expect(component.conversationSubtitle()).toBe('Combine os detalhes da troca diretamente com o colecionador.');
     });
+
+    it('Então usa fallback de nome quando conversa tem número mas não tem nome de figurinha', () => {
+      // Arrange
+      api.conversations.and.returnValue(of([{ ...conversation, stickerName: null }]));
+      const component = new ChatRoomComponent(
+        api,
+        auth as unknown as AuthFacade,
+        new FormBuilder(),
+        realtime,
+        routeWithConversation('conversation-1') as never,
+        notifications
+      );
+
+      // Act
+      component.ngOnInit();
+
+      // Assert
+      expect(component.conversationSubtitle()).toBe('Figurinha #001 - sem nome');
+    });
   });
 
   describe('Dado ausência de conversationId na rota', () => {

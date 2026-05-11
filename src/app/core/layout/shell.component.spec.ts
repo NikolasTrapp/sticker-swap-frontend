@@ -123,6 +123,17 @@ describe('ShellComponent', () => {
       expect(message).toBe('Alguém quer trocar uma figurinha');
     });
 
+    it('Então usa fallback de nome quando notificação informa só o código da figurinha', () => {
+      // Arrange
+      const item = notification({ type: 'NEW_INTEREST', stickerCode: '777', stickerName: null });
+
+      // Act
+      const message = component.formatMessage(item);
+
+      // Assert
+      expect(message).toBe('Ana quer trocar 777 - figurinha');
+    });
+
     it('Então formata mensagem de chat', () => {
       // Arrange
       const item = notification({ type: 'NEW_MESSAGE', actorNickname: 'Caio' });

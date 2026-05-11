@@ -149,9 +149,14 @@ describe('SearchComponent', () => {
       expect(api.stickers).toHaveBeenCalledWith('album-2', { q: '', page: 0, size: 10 });
     });
 
-    it('Então selectSticker define label e carrega titulares', fakeAsync(() => {
+    it('Então selectSticker define label, carrega titulares e rola para o painel de resultados', fakeAsync(() => {
       // Arrange
       component.selectAlbum('album-1');
+      const scrollIntoView = jasmine.createSpy('scrollIntoView');
+      Object.defineProperty(component, 'holdersPanel', {
+        value: { nativeElement: { scrollIntoView } },
+        configurable: true
+      });
 
       // Act
       component.selectSticker(sticker);
@@ -161,6 +166,7 @@ describe('SearchComponent', () => {
       expect(component.selectedStickerId()).toBe('sticker-1');
       expect(component.selectedStickerTitle()).toBe('#001 - Mascote');
       expect(api.holders).toHaveBeenCalledWith('album-1', 'sticker-1', 0, 20);
+      expect(scrollIntoView).toHaveBeenCalledOnceWith({ behavior: 'smooth', block: 'start' });
     }));
 
     it('Então pagina figurinhas mantendo seleção e pagina titulares', fakeAsync(() => {

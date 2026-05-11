@@ -202,6 +202,19 @@ describe('NotificationService', () => {
       });
     });
 
+    it('Então ignora evento de segurança desconhecido sem encerrar a sessão', () => {
+      // Arrange
+      service.startRealtimeConnection();
+
+      // Act
+      subscriptions['/user/queue/security']?.({ body: JSON.stringify({ type: 'PASSWORD_CHANGED', message: 'ok' }) } as IMessage);
+
+      // Assert
+      expect(snackBar.open).not.toHaveBeenCalled();
+      expect(auth.logoutLocal).not.toHaveBeenCalled();
+      expect(router.navigateByUrl).not.toHaveBeenCalled();
+    });
+
     it('Então stopRealtimeConnection desativa o client existente', () => {
       // Arrange
       service.startRealtimeConnection();
