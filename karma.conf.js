@@ -16,7 +16,7 @@ module.exports = function (config) {
     coverageReporter: {
       dir: path.join(__dirname, 'coverage', 'sticker-swap-frontend'),
       subdir: '.',
-      reporters: [{ type: 'html' }, { type: 'lcovonly' }, { type: 'text-summary' }],
+      reporters: [{ type: 'html' }, { type: 'lcovonly' }, { type: 'json-summary' }, { type: 'text-summary' }],
     },
     reporters: ['progress', 'kjhtml'],
     browsers: ['Chrome'],

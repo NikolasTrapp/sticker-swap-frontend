@@ -27,6 +27,40 @@ jobs:
         run: npm ci
       - name: Test
         run: npm run test:ci
+      - name: Coverage summary
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const coveragePath = 'coverage/sticker-swap-frontend/coverage-summary.json';
+          if (!fs.existsSync(coveragePath)) {
+            throw new Error(`Coverage summary not found at ${coveragePath}`);
+          }
+
+          const summary = JSON.parse(fs.readFileSync(coveragePath, 'utf8')).total;
+          const rows = [
+            ['Statements', summary.statements],
+            ['Branches', summary.branches],
+            ['Functions', summary.functions],
+            ['Lines', summary.lines],
+          ];
+
+          const markdown = [
+            '## Coverage',
+            '',
+            '| Métrica | Cobertura | Cobertos / Total |',
+            '| --- | ---: | ---: |',
+            ...rows.map(([label, metric]) => `| ${label} | ${metric.pct}% | ${metric.covered} / ${metric.total} |`),
+            '',
+          ].join('\n');
+
+          fs.writeFileSync('coverage-summary.md', markdown);
+          console.log(markdown);
+
+          if (process.env.GITHUB_STEP_SUMMARY) {
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${markdown}\n`);
+          }
+          NODE
       - name: Build
         run: npm run build:prod
       - name: Cache SonarQube packages
@@ -70,6 +104,13 @@ jobs:
           | Quality Gate | ${marker} ${status} |
           | Relatório | [Abrir no SonarQube Cloud](${sonar_url}) |
           EOF
+
+          if [ -f coverage-summary.md ]; then
+            {
+              echo
+              cat coverage-summary.md
+            } >> "${body}"
+          fi
 
           comment_id="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
             --jq '.[] | select(.body | contains("<!-- sonar-report -->")) | .id' 2>/dev/null | head -n 1 || true)"
