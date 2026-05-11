@@ -19,10 +19,9 @@ module.exports = function (config) {
       reporters: [{ type: 'html' }, { type: 'lcovonly' }, { type: 'json-summary' }, { type: 'text-summary' }],
       check: {
         global: {
-          statements: 10,
-          branches: 5,
-          functions: 10,
-          lines: 10,
+          lines: 80,
+          branches: 70,
+          functions: 100,
         },
       },
     },
