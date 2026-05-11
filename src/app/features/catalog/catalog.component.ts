@@ -89,15 +89,15 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
       }
 
       .catalog-row {
-        align-items: start;
+        align-items: center;
         background: var(--surface);
         border: 1px solid var(--line);
         border-radius: var(--radius);
         display: grid;
-        gap: 0.75rem;
-        grid-template-columns: 1fr;
-        margin-top: 0.5rem;
-        padding: 0.75rem;
+        gap: 0.55rem 0.65rem;
+        grid-template-columns: auto minmax(0, 1fr);
+        margin-top: 0.45rem;
+        padding: 0.6rem 0.65rem;
       }
 
       .header-row {
@@ -115,7 +115,12 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
         font-weight: 900;
         justify-content: center;
         justify-self: start;
-        padding: 0.45rem 0.55rem;
+        padding: 0.42rem 0.55rem;
+      }
+
+      .catalog-row strong {
+        line-height: 1.18;
+        min-width: 0;
       }
 
       @media (min-width: 720px) {

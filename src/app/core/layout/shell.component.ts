@@ -66,15 +66,24 @@ interface NavItem {
       <a mat-stroked-button routerLink="/logout" *ngIf="auth.authenticated()">Sair</a>
     </mat-toolbar>
 
-    <mat-menu #notificationsMenu="matMenu" class="notification-menu">
+    <mat-menu #notificationsMenu="matMenu" class="notification-menu" xPosition="before" yPosition="below">
       <div class="notification-heading" (click)="$event.stopPropagation()">
         <strong>Notificações</strong>
-        <button mat-button type="button" (click)="markAllRead()">Marcar lidas</button>
+        <button
+          mat-icon-button
+          type="button"
+          class="mark-read-button"
+          aria-label="Marcar notificações como lidas"
+          title="Marcar lidas"
+          (click)="markAllRead()"
+        >
+          <mat-icon>done_all</mat-icon>
+        </button>
       </div>
       <mat-divider />
-      <button mat-menu-item type="button" disabled *ngIf="ns.notifications().length === 0">
+      <div class="notification-empty" *ngIf="ns.notifications().length === 0" (click)="$event.stopPropagation()">
         Sem notificações por enquanto
-      </button>
+      </div>
       <button mat-menu-item type="button" *ngFor="let n of ns.notifications()" (click)="openNotification(n)">
         <span class="notification-item" [class.unread]="!n.read">
           <span class="notification-text">{{ formatMessage(n) }}</span>
@@ -114,7 +123,7 @@ interface NavItem {
   styles: [
     `
       .app-topbar {
-        background: rgba(255, 253, 247, 0.96);
+        background: var(--surface);
         border-bottom: 1px solid rgba(221, 214, 195, 0.85);
         color: var(--ink);
         gap: 0.5rem;
@@ -185,8 +194,38 @@ interface NavItem {
         display: flex;
         gap: 0.5rem;
         justify-content: space-between;
-        padding: 0.5rem 0.75rem;
-        width: min(360px, 92vw);
+        min-width: 0;
+        padding: 0.45rem 0.55rem 0.45rem 0.75rem;
+        width: 100%;
+      }
+
+      .notification-heading strong {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .mark-read-button {
+        flex: 0 0 40px;
+      }
+
+      :host ::ng-deep .notification-menu.mat-mdc-menu-panel {
+        max-width: calc(100vw - 24px);
+        min-width: 0;
+        overflow-x: hidden;
+        width: min(320px, calc(100vw - 24px));
+      }
+
+      :host ::ng-deep .notification-menu .mat-mdc-menu-content {
+        overflow-x: hidden;
+        padding: 0;
+      }
+
+      :host ::ng-deep .notification-menu .mat-mdc-menu-item {
+        max-width: 100%;
+        min-width: 0;
+        white-space: normal;
       }
 
       .notification-item {
@@ -209,6 +248,13 @@ interface NavItem {
 
       .notification-item small {
         color: var(--muted);
+      }
+
+      .notification-empty {
+        color: var(--muted);
+        line-height: 1.35;
+        padding: 0.85rem 0.75rem;
+        white-space: normal;
       }
 
       .shell-container {
@@ -243,7 +289,7 @@ interface NavItem {
       }
 
       .bottom-nav {
-        background: rgba(255, 253, 247, 0.98);
+        background: var(--surface);
         border-top: 1px solid var(--line);
         bottom: 0;
         display: grid;

@@ -8,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
 import { finalize } from 'rxjs';
-import { AlbumResponse, ReportReason, ReportResponse, ReportStatus, StickerResponse } from '../../core/api/api.types';
+import { AdminUserResponse, AlbumResponse, ReportReason, ReportResponse, ReportStatus, StickerResponse } from '../../core/api/api.types';
 import { ApiService } from '../../core/api/api.service';
 
 @Component({
@@ -34,7 +34,51 @@ import { ApiService } from '../../core/api/api.service';
         <p class="app-muted">Gerencie álbuns, figurinhas e denúncias da comunidade.</p>
       </section>
 
-      <mat-tab-group class="panel">
+      <div class="admin-section-switcher" role="tablist" aria-label="Áreas do painel administrativo">
+        <button
+          type="button"
+          role="tab"
+          [class.active]="adminTabIndex() === 0"
+          [attr.aria-selected]="adminTabIndex() === 0"
+          (click)="setAdminTab(0)"
+        >
+          Álbuns
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [class.active]="adminTabIndex() === 1"
+          [attr.aria-selected]="adminTabIndex() === 1"
+          (click)="setAdminTab(1)"
+        >
+          Figurinhas
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [class.active]="adminTabIndex() === 2"
+          [attr.aria-selected]="adminTabIndex() === 2"
+          (click)="setAdminTab(2)"
+        >
+          Denúncias
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [class.active]="adminTabIndex() === 3"
+          [attr.aria-selected]="adminTabIndex() === 3"
+          (click)="setAdminTab(3)"
+        >
+          Usuários
+        </button>
+      </div>
+
+      <mat-tab-group
+        class="panel admin-tabs"
+        animationDuration="0ms"
+        [selectedIndex]="adminTabIndex()"
+        (selectedIndexChange)="setAdminTab($event)"
+      >
         <mat-tab label="Álbuns">
           <section class="admin-section">
             <form [formGroup]="albumForm" (ngSubmit)="saveAlbum()" class="form-grid">
@@ -155,6 +199,35 @@ import { ApiService } from '../../core/api/api.service';
             </div>
           </section>
         </mat-tab>
+
+        <mat-tab label="Usuários">
+          <section class="admin-section">
+            <div class="list">
+              <mat-card class="outlined-card" *ngFor="let user of users()">
+                <mat-card-content>
+                  <div class="user-row">
+                    <div class="user-info">
+                      <div class="user-badges">
+                        <span class="pill">{{ user.role === 'ADMIN' ? 'Admin' : 'Usuário' }}</span>
+                        <span class="pill" *ngIf="!user.emailVerified">E-mail não verificado</span>
+                      </div>
+                      <h3>{{ user.email }}</h3>
+                      <small class="app-muted">
+                        Cadastro: {{ user.createdAt | date: 'dd/MM/yyyy' }}
+                        &nbsp;·&nbsp;
+                        Último acesso: {{ user.lastActivityAt ? (user.lastActivityAt | date: 'dd/MM/yyyy HH:mm') : 'Nunca' }}
+                        <ng-container *ngIf="user.lastIpAddress">
+                          &nbsp;·&nbsp; IP: {{ user.lastIpAddress }}
+                        </ng-container>
+                      </small>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+              <div class="empty" *ngIf="!loadingUsers() && !users().length">Nenhum usuário encontrado.</div>
+            </div>
+          </section>
+        </mat-tab>
       </mat-tab-group>
     </main>
   `,
@@ -164,6 +237,53 @@ import { ApiService } from '../../core/api/api.service';
         display: grid;
         gap: 1rem;
         padding: 1rem 0;
+      }
+
+      .admin-section-switcher {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        display: grid;
+        gap: 0.35rem;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        padding: 0.35rem;
+      }
+
+      .admin-section-switcher button {
+        background: transparent;
+        border: 0;
+        border-radius: 6px;
+        color: var(--muted);
+        cursor: pointer;
+        font-weight: 800;
+        min-height: 42px;
+        padding: 0 0.45rem;
+      }
+
+      .admin-section-switcher button.active {
+        background: var(--brand-soft);
+        color: var(--brand-strong);
+      }
+
+      :host ::ng-deep .admin-tabs .mat-mdc-tab-header {
+        display: none;
+      }
+
+      .user-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .user-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-bottom: 0.25rem;
+      }
+
+      .user-info h3 {
+        margin: 0;
       }
 
       .admin-row {
@@ -184,11 +304,14 @@ export class AdminComponent implements OnInit {
   readonly albums = signal<AlbumResponse[]>([]);
   readonly stickers = signal<StickerResponse[]>([]);
   readonly reports = signal<ReportResponse[]>([]);
+  readonly users = signal<AdminUserResponse[]>([]);
   readonly reportStatus = signal<ReportStatus | undefined>(undefined);
+  readonly adminTabIndex = signal(0);
   readonly selectedAlbumId = signal('');
   readonly editingAlbumId = signal<string | null>(null);
   readonly editingStickerId = signal<string | null>(null);
   readonly saving = signal(false);
+  readonly loadingUsers = signal(false);
 
   readonly albumForm = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(200)]],
@@ -210,6 +333,20 @@ export class AdminComponent implements OnInit {
   ngOnInit(): void {
     this.loadAlbums();
     this.loadReports();
+  }
+
+  setAdminTab(index: number): void {
+    this.adminTabIndex.set(index);
+    if (index === 3 && !this.users().length) {
+      this.loadUsers();
+    }
+  }
+
+  loadUsers(): void {
+    this.loadingUsers.set(true);
+    this.api.adminUsers().pipe(finalize(() => this.loadingUsers.set(false))).subscribe((page) => {
+      this.users.set(page.content);
+    });
   }
 
   loadAlbums(): void {

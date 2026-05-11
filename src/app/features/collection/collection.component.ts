@@ -114,10 +114,10 @@ interface FilterOption {
             />
             <button mat-button type="button" (click)="setQuantity(item, item.repeatedQuantity + 1)">+</button>
           </div>
-          <mat-checkbox [checked]="item.wanted" (change)="toggleWanted(item, $event.checked)">
+          <mat-checkbox class="wanted-cell" [checked]="item.wanted" (change)="toggleWanted(item, $event.checked)">
             Quero
           </mat-checkbox>
-          <button mat-stroked-button type="button" (click)="findHolders(item)">Buscar</button>
+          <button class="search-cell" mat-stroked-button type="button" (click)="findHolders(item)">Buscar</button>
         </div>
 
         <div class="empty" *ngIf="!loading() && !collection().length">Nenhuma figurinha encontrada.</div>
@@ -170,18 +170,19 @@ interface FilterOption {
 
       .collection-table {
         overflow: visible;
+        padding: 0.75rem;
       }
 
       .collection-row {
-        align-items: start;
+        align-items: center;
         background: var(--surface);
         border: 1px solid var(--line);
         border-radius: var(--radius);
         display: grid;
-        gap: 0.75rem;
-        grid-template-columns: 1fr;
-        margin-top: 0.65rem;
-        padding: 0.8rem;
+        gap: 0.55rem 0.65rem;
+        grid-template-columns: auto minmax(0, 1fr);
+        margin-top: 0.5rem;
+        padding: 0.65rem;
       }
 
       .header-row {
@@ -198,14 +199,19 @@ interface FilterOption {
         color: var(--brand-strong);
         cursor: pointer;
         font-weight: 900;
-        height: 36px;
+        height: 34px;
         justify-self: start;
-        padding: 0 0.75rem;
+        padding: 0 0.65rem;
       }
 
       .sticker-cell {
         display: grid;
         gap: 0.25rem;
+        min-width: 0;
+      }
+
+      .sticker-cell strong {
+        line-height: 1.18;
       }
 
       .stepper {
@@ -213,13 +219,14 @@ interface FilterOption {
         border: 1px solid var(--line);
         border-radius: 8px;
         display: grid;
-        grid-template-columns: 40px 1fr 40px;
+        grid-column: 1 / -1;
+        grid-template-columns: 42px 1fr 42px;
         overflow: hidden;
-        width: min(100%, 168px);
+        width: 100%;
       }
 
       .stepper button {
-        min-width: 40px;
+        min-width: 42px;
       }
 
       .stepper input {
@@ -228,6 +235,16 @@ interface FilterOption {
         border-right: 1px solid var(--line);
         height: 40px;
         text-align: center;
+        width: 100%;
+      }
+
+      .wanted-cell {
+        min-height: 36px;
+      }
+
+      .search-cell {
+        justify-self: stretch;
+        min-height: 36px;
         width: 100%;
       }
 
@@ -246,6 +263,7 @@ interface FilterOption {
 
         .collection-table {
           overflow-x: auto;
+          padding: 1.25rem;
         }
 
         .collection-row {
@@ -257,6 +275,20 @@ interface FilterOption {
           grid-template-columns: 82px minmax(180px, 1fr) 150px 118px 92px;
           min-width: 720px;
           padding: 0.65rem 0;
+        }
+
+        .stepper {
+          grid-column: auto;
+          grid-template-columns: 40px 1fr 40px;
+          width: min(100%, 168px);
+        }
+
+        .stepper button {
+          min-width: 40px;
+        }
+
+        .search-cell {
+          width: auto;
         }
 
         .header-row {

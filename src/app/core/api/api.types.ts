@@ -155,6 +155,19 @@ export interface NotificationResponse {
   createdAt: string;
 }
 
+export interface AdminUserResponse {
+  id: string;
+  email: string;
+  role: 'USER' | 'ADMIN';
+  status: string;
+  emailVerified: boolean;
+  emailVerifiedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  lastActivityAt: string | null;
+  lastIpAddress: string | null;
+}
+
 export type ReportReason = 'SPAM' | 'INAPPROPRIATE_CONTENT' | 'HARASSMENT' | 'OTHER';
 export type ReportStatus = 'PENDING' | 'REVIEWED' | 'DISMISSED';
 

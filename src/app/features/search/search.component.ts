@@ -1,5 +1,5 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -84,7 +84,7 @@ const REPORT_REASONS: Array<{ value: ReportReason; label: string }> = [
         />
       </section>
 
-      <section class="panel holders-panel" *ngIf="selectedStickerId()">
+      <section #holdersPanel class="panel holders-panel" *ngIf="selectedStickerId()">
         <div class="section-title compact-title">
           <div>
             <h2>{{ selectedStickerTitle() }}</h2>
@@ -176,6 +176,10 @@ const REPORT_REASONS: Array<{ value: ReportReason; label: string }> = [
         margin-bottom: 0.75rem;
       }
 
+      .holders-panel {
+        scroll-margin-top: 76px;
+      }
+
       .holder-card {
         border-radius: 8px;
         margin-bottom: 0.65rem;
@@ -236,6 +240,8 @@ export class SearchComponent implements OnInit {
   readonly holderPageIndex = signal(0);
   readonly holderPageSize = signal(20);
   readonly stickerQueryControl = new FormControl('', { nonNullable: true });
+
+  @ViewChild('holdersPanel') private holdersPanel?: ElementRef<HTMLElement>;
 
   private readonly destroyRef = inject(DestroyRef);
 
@@ -372,6 +378,13 @@ export class SearchComponent implements OnInit {
       this.holderTotalElements.set(page.totalElements);
       this.holderPageIndex.set(page.number);
       this.holderPageSize.set(page.size);
+      this.scrollToHolders();
+    });
+  }
+
+  private scrollToHolders(): void {
+    setTimeout(() => {
+      this.holdersPanel?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }
 }

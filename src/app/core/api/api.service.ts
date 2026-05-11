@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { RuntimeConfigService } from '../config/runtime-config.service';
 import {
+  AdminUserResponse,
   AlbumResponse,
   BlockedUserResponse,
   CepLookupResponse,
@@ -241,6 +242,12 @@ export class ApiService {
   reports(status?: ReportStatus): Observable<Page<ReportResponse>> {
     return this.http.get<Page<ReportResponse>>(this.config.apiUrl('/admin/moderation/reports'), {
       params: this.params({ status, size: 50 })
+    });
+  }
+
+  adminUsers(page = 0, size = 30): Observable<Page<AdminUserResponse>> {
+    return this.http.get<Page<AdminUserResponse>>(this.config.apiUrl('/admin/users'), {
+      params: this.params({ page, size, sort: 'createdAt,desc' })
     });
   }
 
