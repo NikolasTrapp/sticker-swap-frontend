@@ -43,7 +43,6 @@ export const appConfig: ApplicationConfig = {
         deps: [RuntimeConfigService],
         useFactory: (runtimeConfig: RuntimeConfigService) => {
           const config = runtimeConfig.snapshot();
-          const origin = window.location.origin;
           return new StsConfigStaticLoader({
             authority: config.oidc.authority,
             redirectUrl: config.oidc.redirectUrl,
@@ -53,6 +52,7 @@ export const appConfig: ApplicationConfig = {
             responseType: 'code',
             silentRenew: true,
             useRefreshToken: true,
+            autoUserInfo: false,
             logLevel: LogLevel.Warn,
             secureRoutes: [config.apiBaseUrl],
             unauthorizedRoute: '/login',

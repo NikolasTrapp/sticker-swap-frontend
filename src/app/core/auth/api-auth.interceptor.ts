@@ -7,6 +7,7 @@ import { RuntimeConfigService } from '../config/runtime-config.service';
 const AUTH_EXCLUSIONS = [
   '/.well-known/',
   '/oauth2/',
+  '/userinfo',
   '/login',
   '/auth/register',
   '/auth/email-confirmations',

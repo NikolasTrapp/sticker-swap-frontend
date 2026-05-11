@@ -1,6 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { OidcSecurityService } from 'angular-auth-oidc-client';
-import { Observable, finalize, map, tap } from 'rxjs';
+import { Observable, finalize, map, shareReplay, tap } from 'rxjs';
 
 export interface AuthProfile {
   sub: string;
@@ -14,17 +14,26 @@ export class AuthFacade {
   readonly profile = signal<AuthProfile | null>(null);
   readonly busy = signal(false);
   readonly isAdmin = computed(() => this.profile()?.role === 'ADMIN');
+  private checkAuthRequest$: Observable<boolean> | null = null;
 
   constructor(private readonly oidc: OidcSecurityService) {}
 
   checkAuth(): Observable<boolean> {
-    return this.oidc.checkAuth().pipe(
-      tap((result: { isAuthenticated: boolean; accessToken?: string }) => {
-        this.authenticated.set(result.isAuthenticated);
-        this.profile.set(result.accessToken ? decodeProfile(result.accessToken) : null);
-      }),
-      map((result: { isAuthenticated: boolean }) => result.isAuthenticated)
-    );
+    if (!this.checkAuthRequest$) {
+      this.checkAuthRequest$ = this.oidc.checkAuth().pipe(
+        tap((result: { isAuthenticated: boolean; accessToken?: string }) => {
+          this.authenticated.set(result.isAuthenticated);
+          this.profile.set(result.accessToken ? decodeProfile(result.accessToken) : null);
+        }),
+        map((result: { isAuthenticated: boolean }) => result.isAuthenticated),
+        finalize(() => {
+          this.checkAuthRequest$ = null;
+        }),
+        shareReplay({ bufferSize: 1, refCount: false })
+      );
+    }
+
+    return this.checkAuthRequest$;
   }
 
   startLogin(): void {

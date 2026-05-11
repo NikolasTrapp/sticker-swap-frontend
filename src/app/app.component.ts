@@ -15,7 +15,7 @@ export class AppComponent implements OnInit {
     // OAuthCallbackComponent handles the callback exclusively; calling checkAuth()
     // here concurrently causes state validation failure ("authCallback incorrect state")
     // and clears the token before it can be stored.
-    if (!window.location.pathname.startsWith('/oauth/callback')) {
+    if (!window.location.pathname.includes('/oauth/callback')) {
       this.auth.checkAuth().subscribe();
     }
   }
