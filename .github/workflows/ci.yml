@@ -1,4 +1,4 @@
-name: frontend-ci
+name: ci
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   checks: write
   contents: read
   issues: write
-  pull-requests: write
+  pull-requests: read
 
 jobs:
   build:
@@ -72,16 +72,12 @@ jobs:
           EOF
 
           comment_id="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
-            --jq '.[] | select(.body | contains("<!-- sonar-report -->")) | .id' 2>/dev/null | head -n 1 || true)"
+            --jq '.[] | select(.body | contains("<!-- sonar-report -->")) | .id' | head -n 1)"
 
           if [ -n "${comment_id}" ]; then
-            if ! gh api --method PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${comment_id}" \
-              --raw-field body="$(cat "${body}")"; then
-              echo "::warning::Could not update the SonarQube PR comment. Check GITHUB_TOKEN write permissions."
-            fi
+            gh api --method PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${comment_id}" \
+              --raw-field body="$(cat "${body}")"
           else
-            if ! gh api --method POST "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
-              --raw-field body="$(cat "${body}")"; then
-              echo "::warning::Could not create the SonarQube PR comment. Check GITHUB_TOKEN write permissions."
-            fi
+            gh api --method POST "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+              --raw-field body="$(cat "${body}")"
           fi
