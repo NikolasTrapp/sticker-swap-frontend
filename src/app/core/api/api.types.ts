@@ -159,13 +159,18 @@ export interface AdminUserResponse {
   id: string;
   email: string;
   role: 'USER' | 'ADMIN';
-  status: string;
+  status: 'ACTIVE' | 'INACTIVE';
   emailVerified: boolean;
   emailVerifiedAt: string | null;
   createdAt: string;
   updatedAt: string;
   lastActivityAt: string | null;
   lastIpAddress: string | null;
+}
+
+export interface SecurityEventResponse {
+  type: 'ACCOUNT_BLOCKED';
+  message: string;
 }
 
 export type ReportReason = 'SPAM' | 'INAPPROPRIATE_CONTENT' | 'HARASSMENT' | 'OTHER';

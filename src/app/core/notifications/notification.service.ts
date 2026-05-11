@@ -1,8 +1,10 @@
 import { Injectable, computed, effect, signal } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { Client, IMessage } from '@stomp/stompjs';
 import { take } from 'rxjs';
 import { ApiService } from '../api/api.service';
-import { NotificationResponse } from '../api/api.types';
+import { NotificationResponse, SecurityEventResponse } from '../api/api.types';
 import { AuthFacade } from '../auth/auth.facade';
 import { RuntimeConfigService } from '../config/runtime-config.service';
 
@@ -17,7 +19,9 @@ export class NotificationService {
   constructor(
     private readonly api: ApiService,
     private readonly auth: AuthFacade,
-    private readonly config: RuntimeConfigService
+    private readonly config: RuntimeConfigService,
+    private readonly router: Router,
+    private readonly snackBar: MatSnackBar
   ) {
     effect(() => {
       if (this.auth.authenticated()) {
@@ -66,6 +70,16 @@ export class NotificationService {
             this.client?.subscribe('/user/queue/notifications', (message: IMessage) => {
               const incoming = JSON.parse(message.body) as NotificationResponse;
               this.notifications.update((ns) => [incoming, ...ns]);
+            });
+            this.client?.subscribe('/user/queue/security', (message: IMessage) => {
+              const incoming = JSON.parse(message.body) as SecurityEventResponse;
+              if (incoming.type === 'ACCOUNT_BLOCKED') {
+                this.snackBar.open(incoming.message || 'Sua conta foi bloqueada por um administrador.', 'Fechar', {
+                  duration: 8000
+                });
+                this.auth.logoutLocal();
+                void this.router.navigateByUrl('/logged-out');
+              }
             });
           }
         });

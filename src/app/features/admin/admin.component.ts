@@ -4,12 +4,17 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { finalize } from 'rxjs';
 import { AdminUserResponse, AlbumResponse, ReportReason, ReportResponse, ReportStatus, StickerResponse } from '../../core/api/api.types';
 import { ApiService } from '../../core/api/api.service';
+import { AuthFacade } from '../../core/auth/auth.facade';
 
 @Component({
   selector: 'app-admin',
@@ -19,9 +24,13 @@ import { ApiService } from '../../core/api/api.service';
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
+    MatIconModule,
     MatInputModule,
+    MatPaginatorModule,
     MatSelectModule,
     MatTabsModule,
+    MatTableModule,
+    MatTooltipModule,
     NgFor,
     NgIf,
     ReactiveFormsModule
@@ -202,30 +211,128 @@ import { ApiService } from '../../core/api/api.service';
 
         <mat-tab label="Usuários">
           <section class="admin-section">
-            <div class="list">
-              <mat-card class="outlined-card" *ngFor="let user of users()">
-                <mat-card-content>
-                  <div class="user-row">
-                    <div class="user-info">
-                      <div class="user-badges">
-                        <span class="pill">{{ user.role === 'ADMIN' ? 'Admin' : 'Usuário' }}</span>
-                        <span class="pill" *ngIf="!user.emailVerified">E-mail não verificado</span>
-                      </div>
-                      <h3>{{ user.email }}</h3>
-                      <small class="app-muted">
-                        Cadastro: {{ user.createdAt | date: 'dd/MM/yyyy' }}
-                        &nbsp;·&nbsp;
-                        Último acesso: {{ user.lastActivityAt ? (user.lastActivityAt | date: 'dd/MM/yyyy HH:mm') : 'Nunca' }}
-                        <ng-container *ngIf="user.lastIpAddress">
-                          &nbsp;·&nbsp; IP: {{ user.lastIpAddress }}
-                        </ng-container>
-                      </small>
+            <form class="user-search" [formGroup]="userSearchForm" (ngSubmit)="searchUsers()">
+              <mat-form-field>
+                <mat-label>Buscar por e-mail</mat-label>
+                <mat-icon matPrefix>search</mat-icon>
+                <input matInput formControlName="q" autocomplete="off" />
+                <button
+                  mat-icon-button
+                  matSuffix
+                  type="button"
+                  aria-label="Limpar busca"
+                  matTooltip="Limpar busca"
+                  *ngIf="userSearchForm.controls.q.value"
+                  (click)="clearUserSearch()"
+                >
+                  <mat-icon>close</mat-icon>
+                </button>
+              </mat-form-field>
+              <button mat-flat-button color="primary" type="submit" [disabled]="loadingUsers()">
+                Buscar
+              </button>
+            </form>
+
+            <div class="users-table-wrap">
+              <table mat-table [dataSource]="users()" class="users-table">
+                <ng-container matColumnDef="email">
+                  <th mat-header-cell *matHeaderCellDef>E-mail</th>
+                  <td mat-cell *matCellDef="let user">
+                    <div class="user-email">
+                      <strong>{{ user.email }}</strong>
+                      <small *ngIf="user.id === auth.profile()?.sub">Você</small>
                     </div>
-                  </div>
-                </mat-card-content>
-              </mat-card>
-              <div class="empty" *ngIf="!loadingUsers() && !users().length">Nenhum usuário encontrado.</div>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="role">
+                  <th mat-header-cell *matHeaderCellDef>Perfil</th>
+                  <td mat-cell *matCellDef="let user">
+                    <span class="pill">{{ user.role === 'ADMIN' ? 'Admin' : 'Usuário' }}</span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="status">
+                  <th mat-header-cell *matHeaderCellDef>Status</th>
+                  <td mat-cell *matCellDef="let user">
+                    <span class="pill" [class.blocked]="user.status === 'INACTIVE'">
+                      {{ user.status === 'ACTIVE' ? 'Ativo' : 'Bloqueado' }}
+                    </span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="emailVerified">
+                  <th mat-header-cell *matHeaderCellDef>Verificação</th>
+                  <td mat-cell *matCellDef="let user">
+                    {{ user.emailVerified ? 'Verificado' : 'Pendente' }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="createdAt">
+                  <th mat-header-cell *matHeaderCellDef>Cadastro</th>
+                  <td mat-cell *matCellDef="let user">{{ user.createdAt | date: 'dd/MM/yyyy' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="lastActivityAt">
+                  <th mat-header-cell *matHeaderCellDef>Último acesso</th>
+                  <td mat-cell *matCellDef="let user">
+                    {{ user.lastActivityAt ? (user.lastActivityAt | date: 'dd/MM/yyyy HH:mm') : 'Nunca' }}
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="lastIpAddress">
+                  <th mat-header-cell *matHeaderCellDef>IP</th>
+                  <td mat-cell *matCellDef="let user">{{ user.lastIpAddress || '-' }}</td>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef>Ações</th>
+                  <td mat-cell *matCellDef="let user">
+                    <button
+                      mat-icon-button
+                      color="warn"
+                      type="button"
+                      *ngIf="user.status === 'ACTIVE'"
+                      [disabled]="user.id === auth.profile()?.sub || updatingUserId() === user.id"
+                      aria-label="Bloquear usuário"
+                      matTooltip="Bloquear usuário"
+                      (click)="setUserBlocked(user, true)"
+                    >
+                      <mat-icon>block</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      type="button"
+                      *ngIf="user.status === 'INACTIVE'"
+                      [disabled]="updatingUserId() === user.id"
+                      aria-label="Desbloquear usuário"
+                      matTooltip="Desbloquear usuário"
+                      (click)="setUserBlocked(user, false)"
+                    >
+                      <mat-icon>lock_open</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="userDisplayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: userDisplayedColumns"></tr>
+                <tr class="mat-row" *matNoDataRow>
+                  <td class="mat-cell empty-cell" [attr.colspan]="userDisplayedColumns.length">
+                    {{ loadingUsers() ? 'Carregando usuários...' : 'Nenhum usuário encontrado.' }}
+                  </td>
+                </tr>
+              </table>
             </div>
+
+            <mat-paginator
+              [length]="usersTotal()"
+              [pageIndex]="usersPageIndex()"
+              [pageSize]="usersPageSize()"
+              [pageSizeOptions]="[10, 20, 50]"
+              [disabled]="loadingUsers()"
+              showFirstLastButtons
+              (page)="onUsersPage($event)"
+            />
           </section>
         </mat-tab>
       </mat-tab-group>
@@ -269,21 +376,63 @@ import { ApiService } from '../../core/api/api.service';
         display: none;
       }
 
-      .user-row {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
+      .user-search {
+        align-items: start;
+        display: grid;
+        gap: 0.75rem;
       }
 
-      .user-badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
-        margin-bottom: 0.25rem;
+      .user-search mat-form-field {
+        min-width: 0;
       }
 
-      .user-info h3 {
-        margin: 0;
+      .users-table-wrap {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow-x: auto;
+      }
+
+      .users-table {
+        min-width: 980px;
+        width: 100%;
+      }
+
+      .users-table th {
+        color: var(--muted);
+        font-weight: 900;
+        white-space: nowrap;
+      }
+
+      .users-table td {
+        vertical-align: middle;
+      }
+
+      .user-email {
+        display: grid;
+        gap: 0.1rem;
+        min-width: 0;
+      }
+
+      .user-email strong {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .user-email small {
+        color: var(--muted);
+        font-weight: 800;
+      }
+
+      .pill.blocked {
+        background: rgba(211, 47, 47, 0.12);
+        color: #b3261e;
+      }
+
+      .empty-cell {
+        color: var(--muted);
+        padding: 1rem;
+        text-align: center;
       }
 
       .admin-row {
@@ -293,6 +442,10 @@ import { ApiService } from '../../core/api/api.service';
       }
 
       @media (min-width: 800px) {
+        .user-search {
+          grid-template-columns: minmax(260px, 420px) auto;
+        }
+
         .admin-row {
           grid-template-columns: 1fr auto;
         }
@@ -305,6 +458,9 @@ export class AdminComponent implements OnInit {
   readonly stickers = signal<StickerResponse[]>([]);
   readonly reports = signal<ReportResponse[]>([]);
   readonly users = signal<AdminUserResponse[]>([]);
+  readonly usersTotal = signal(0);
+  readonly usersPageIndex = signal(0);
+  readonly usersPageSize = signal(20);
   readonly reportStatus = signal<ReportStatus | undefined>(undefined);
   readonly adminTabIndex = signal(0);
   readonly selectedAlbumId = signal('');
@@ -312,6 +468,18 @@ export class AdminComponent implements OnInit {
   readonly editingStickerId = signal<string | null>(null);
   readonly saving = signal(false);
   readonly loadingUsers = signal(false);
+  readonly usersLoaded = signal(false);
+  readonly updatingUserId = signal<string | null>(null);
+  readonly userDisplayedColumns = [
+    'email',
+    'role',
+    'status',
+    'emailVerified',
+    'createdAt',
+    'lastActivityAt',
+    'lastIpAddress',
+    'actions'
+  ];
 
   readonly albumForm = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(200)]],
@@ -325,9 +493,14 @@ export class AdminComponent implements OnInit {
     description: ['']
   });
 
+  readonly userSearchForm = this.fb.nonNullable.group({
+    q: ['']
+  });
+
   constructor(
     private readonly api: ApiService,
-    private readonly fb: FormBuilder
+    private readonly fb: FormBuilder,
+    readonly auth: AuthFacade
   ) {}
 
   ngOnInit(): void {
@@ -337,16 +510,46 @@ export class AdminComponent implements OnInit {
 
   setAdminTab(index: number): void {
     this.adminTabIndex.set(index);
-    if (index === 3 && !this.users().length) {
+    if (index === 3 && !this.usersLoaded()) {
       this.loadUsers();
     }
   }
 
-  loadUsers(): void {
+  loadUsers(page = this.usersPageIndex(), size = this.usersPageSize()): void {
     this.loadingUsers.set(true);
-    this.api.adminUsers().pipe(finalize(() => this.loadingUsers.set(false))).subscribe((page) => {
-      this.users.set(page.content);
+    this.usersPageIndex.set(page);
+    this.usersPageSize.set(size);
+    this.api.adminUsers(page, size, this.userSearchQuery()).pipe(finalize(() => this.loadingUsers.set(false))).subscribe((result) => {
+      this.users.set(result.content);
+      this.usersTotal.set(result.totalElements);
+      this.usersLoaded.set(true);
     });
+  }
+
+  searchUsers(): void {
+    this.loadUsers(0, this.usersPageSize());
+  }
+
+  clearUserSearch(): void {
+    this.userSearchForm.reset({ q: '' });
+    this.loadUsers(0, this.usersPageSize());
+  }
+
+  onUsersPage(event: PageEvent): void {
+    this.loadUsers(event.pageIndex, event.pageSize);
+  }
+
+  setUserBlocked(user: AdminUserResponse, blocked: boolean): void {
+    this.updatingUserId.set(user.id);
+    const request = blocked ? this.api.adminBlockUser(user.id) : this.api.adminUnblockUser(user.id);
+    request.pipe(finalize(() => this.updatingUserId.set(null))).subscribe((updated) => {
+      this.users.update((users) => users.map((item) => (item.id === updated.id ? updated : item)));
+    });
+  }
+
+  private userSearchQuery(): string | null {
+    const query = this.userSearchForm.controls.q.value.trim();
+    return query || null;
   }
 
   loadAlbums(): void {

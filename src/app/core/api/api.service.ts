@@ -40,7 +40,7 @@ export class ApiService {
 
   confirmEmail(token: string): Observable<UserResponse> {
     return this.http.get<UserResponse>(this.config.apiUrl('/auth/email-confirmations/confirm'), {
-      params: this.params({ token })
+      params: this.params({ token, redirect: false })
     });
   }
 
@@ -245,10 +245,18 @@ export class ApiService {
     });
   }
 
-  adminUsers(page = 0, size = 30): Observable<Page<AdminUserResponse>> {
+  adminUsers(page = 0, size = 20, q?: string | null): Observable<Page<AdminUserResponse>> {
     return this.http.get<Page<AdminUserResponse>>(this.config.apiUrl('/admin/users'), {
-      params: this.params({ page, size, sort: 'createdAt,desc' })
+      params: this.params({ q, page, size, sort: 'createdAt,desc' })
     });
+  }
+
+  adminBlockUser(userId: string): Observable<AdminUserResponse> {
+    return this.http.patch<AdminUserResponse>(this.config.apiUrl(`/admin/users/${userId}/block`), {});
+  }
+
+  adminUnblockUser(userId: string): Observable<AdminUserResponse> {
+    return this.http.patch<AdminUserResponse>(this.config.apiUrl(`/admin/users/${userId}/unblock`), {});
   }
 
   private params(values: Record<string, QueryValue>): HttpParams {

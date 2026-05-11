@@ -1,8 +1,10 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { ApiError } from '../api/api.types';
+import { AuthFacade } from './auth.facade';
 
 const FIELD_LABELS: Record<string, string> = {
   email: 'E-mail',
@@ -21,11 +23,18 @@ const FIELD_LABELS: Record<string, string> = {
 
 export const apiErrorInterceptor: HttpInterceptorFn = (request, next) => {
   const snackBar = inject(MatSnackBar);
+  const auth = inject(AuthFacade);
+  const router = inject(Router);
 
   return next(request).pipe(
     catchError((error: HttpErrorResponse) => {
+      const body = error.error as Partial<ApiError> | null;
       if (!request.url.includes('assets/config.json')) {
         snackBar.open(errorMessage(error, request.url), 'Fechar', { duration: 6000 });
+      }
+      if (isBlockedAccountMessage(body?.message)) {
+        auth.logoutLocal();
+        void router.navigateByUrl('/logged-out');
       }
       return throwError(() => error);
     })
@@ -63,6 +72,9 @@ function errorMessage(error: HttpErrorResponse, url: string): string {
   }
 
   if (error.status === 403) {
+    if (isBlockedAccountMessage(body?.message)) {
+      return 'Sua conta foi bloqueada por um administrador.';
+    }
     return 'Você não tem permissão para acessar esta área.';
   }
 
@@ -135,6 +147,9 @@ function friendlyBodyMessage(message?: string | null): string | null {
   if (normalized.includes('account is inactive')) {
     return 'Esta conta está inativa.';
   }
+  if (isBlockedAccountMessage(message)) {
+    return 'Sua conta foi bloqueada por um administrador.';
+  }
   if (normalized.includes('email already registered')) {
     return 'Este e-mail já está cadastrado.';
   }
@@ -154,4 +169,12 @@ function friendlyBodyMessage(message?: string | null): string | null {
     return 'Tivemos um problema inesperado. Tente novamente em instantes.';
   }
   return message;
+}
+
+function isBlockedAccountMessage(message?: string | null): boolean {
+  if (!message) {
+    return false;
+  }
+  const normalized = message.toLowerCase();
+  return normalized.includes('account is blocked') || normalized.includes('account is inactive');
 }

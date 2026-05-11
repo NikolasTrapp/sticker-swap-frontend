@@ -29,6 +29,10 @@ export const routes: Routes = [
       import('./features/auth/email-confirmation.component').then((m) => m.EmailConfirmationComponent)
   },
   {
+    path: 'email-confirmed',
+    loadComponent: () => import('./features/auth/email-confirmed.component').then((m) => m.EmailConfirmedComponent)
+  },
+  {
     path: 'email-confirmation-sent',
     loadComponent: () =>
       import('./features/auth/email-confirmation-sent.component').then((m) => m.EmailConfirmationSentComponent)
