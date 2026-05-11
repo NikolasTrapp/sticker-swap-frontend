@@ -74,3 +74,4 @@ npm run build:prod
 O build de produção sai em `dist/sticker-swap-frontend/browser`.
 
 Ao hospedar como SPA, configure fallback de rotas para `index.html`. Em CloudFront, veja `infra/aws/cloudfront-spa.md`. Em Nginx, veja `infra/nginx/sticker-swap-backend.conf` para o contexto de proxy/backend.
+

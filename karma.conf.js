@@ -6,6 +6,7 @@ module.exports = function (config) {
     frameworks: ['jasmine'],
     plugins: [
       require('karma-jasmine'),
+      require('karma-firefox-launcher'),
       require('karma-chrome-launcher'),
       require('karma-jasmine-html-reporter'),
       require('karma-coverage'),
@@ -16,11 +17,22 @@ module.exports = function (config) {
     coverageReporter: {
       dir: path.join(__dirname, 'coverage', 'sticker-swap-frontend'),
       subdir: '.',
-      reporters: [{ type: 'html' }, { type: 'lcovonly' }, { type: 'text-summary' }],
+      reporters: [{ type: 'html' }, { type: 'lcovonly' }, { type: 'json-summary' }, { type: 'text-summary' }],
+      check: {
+        global: {
+          lines: 80,
+          branches: 70,
+          functions: 100,
+        },
+      },
     },
     reporters: ['progress', 'kjhtml'],
-    browsers: ['Chrome'],
+    browsers: ['Firefox', 'Chrome'],
     customLaunchers: {
+      FirefoxHeadless: {
+        base: 'Firefox',
+        flags: ['-headless'],
+      },
       ChromeHeadlessNoSandbox: {
         base: 'ChromeHeadless',
         flags: ['--no-sandbox', '--headless', '--disable-gpu', '--disable-dev-shm-usage'],

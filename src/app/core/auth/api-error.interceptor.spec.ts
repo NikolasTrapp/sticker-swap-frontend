@@ -249,4 +249,117 @@ describe('apiErrorInterceptor', () => {
       { duration: 6000 }
     );
   });
+
+  it('exibe mensagem de e-mail não encontrado para /auth/password-reset-requests com 404', () => {
+    http.get(`${API_URL}/auth/password-reset-requests`).subscribe({ error: () => {} });
+
+    const req = controller.expectOne(`${API_URL}/auth/password-reset-requests`);
+    req.flush(null, { status: 404, statusText: 'Not Found' });
+
+    expect(snackBar.open).toHaveBeenCalledOnceWith(
+      'Não encontramos uma conta com esse e-mail.',
+      'Fechar',
+      { duration: 6000 }
+    );
+  });
+
+  it('exibe Campo com fallback quando fieldError não informa campo nem mensagem', () => {
+    http.get(`${API_URL}/me/profile`).subscribe({ error: () => {} });
+
+    const req = controller.expectOne(`${API_URL}/me/profile`);
+    req.flush({ fieldErrors: [{}] }, { status: 400, statusText: 'Bad Request' });
+
+    expect(snackBar.open).toHaveBeenCalledOnceWith('Campo: revise este campo.', 'Fechar', { duration: 6000 });
+  });
+
+  ([
+    ['brazilian zip code', 'CEP: informe um CEP com 8 dígitos.'],
+    ['required', 'Nome: preencha este campo.'],
+    ['size must be between 2 and 50', 'Descrição: confira o tamanho informado.'],
+    ['must match "[A-Z]{2}"', 'UF: use o formato esperado.'],
+    ['mensagem customizada', 'Código: mensagem customizada']
+  ] as Array<[string, string]>).forEach(([backendMessage, expected]) => {
+    it(`exibe validação amigável para "${backendMessage}"`, () => {
+      http.get(`${API_URL}/me/profile`).subscribe({ error: () => {} });
+
+      const req = controller.expectOne(`${API_URL}/me/profile`);
+      req.flush(
+        { fieldErrors: [{ field: backendMessage === 'required' ? 'name' : backendMessage === 'must match "[A-Z]{2}"' ? 'state' : backendMessage === 'size must be between 2 and 50' ? 'description' : backendMessage === 'mensagem customizada' ? 'code' : 'cep', message: backendMessage }] },
+        { status: 400, statusText: 'Bad Request' }
+      );
+
+      expect(snackBar.open).toHaveBeenCalledOnceWith(expected, 'Fechar', { duration: 6000 });
+    });
+  });
+
+  ([
+    ['Bad credentials', 422, 'E-mail ou senha incorretos.'],
+    ['Invalid or expired token', 422, 'Este link expirou ou já foi usado.'],
+    ['Quantity must be zero or positive', 409, 'A quantidade não pode ser negativa.'],
+    ['Album is not active', 409, 'Este álbum não está disponível no momento.'],
+    ['Sticker code already exists', 409, 'Já existe uma figurinha com esse código neste álbum.'],
+    ['Email already registered', 409, 'Este e-mail já está cadastrado.'],
+    ['CEP não encontrado', 422, 'Não encontramos esse CEP.'],
+    ['Validation failed', 422, 'Revise os campos destacados e tente novamente.'],
+    ['No resource at /missing', 404, 'Não encontramos esse recurso.'],
+    ['Unauthorized', 422, 'Sua sessão expirou. Entre novamente.'],
+    ['Internal Server Error', 422, 'Tivemos um problema inesperado. Tente novamente em instantes.']
+  ] as Array<[string, number, string]>).forEach(([message, status, expected]) => {
+    it(`exibe mensagem de corpo amigável para "${message}"`, () => {
+      http.get(`${API_URL}/me/profile`).subscribe({ error: () => {} });
+
+      const req = controller.expectOne(`${API_URL}/me/profile`);
+      req.flush({ message, fieldErrors: [] }, { status, statusText: 'Error' });
+
+      expect(snackBar.open).toHaveBeenCalledOnceWith(expected, 'Fechar', { duration: 6000 });
+    });
+  });
+
+  it('exibe fallback de conflito quando 409 não possui mensagem amigável', () => {
+    http.get(`${API_URL}/albums`).subscribe({ error: () => {} });
+
+    const req = controller.expectOne(`${API_URL}/albums`);
+    req.flush(null, { status: 409, statusText: 'Conflict' });
+
+    expect(snackBar.open).toHaveBeenCalledOnceWith(
+      'Não foi possível concluir porque já existe um registro parecido.',
+      'Fechar',
+      { duration: 6000 }
+    );
+  });
+
+  it('exibe fallback de validação quando 422 não possui mensagem amigável', () => {
+    http.get(`${API_URL}/albums`).subscribe({ error: () => {} });
+
+    const req = controller.expectOne(`${API_URL}/albums`);
+    req.flush(null, { status: 422, statusText: 'Unprocessable Entity' });
+
+    expect(snackBar.open).toHaveBeenCalledOnceWith(
+      'Revise as informações e tente novamente.',
+      'Fechar',
+      { duration: 6000 }
+    );
+  });
+
+  it('exibe mensagem do backend quando não há fallback mais específico', () => {
+    http.get(`${API_URL}/albums`).subscribe({ error: () => {} });
+
+    const req = controller.expectOne(`${API_URL}/albums`);
+    req.flush({ message: 'Mensagem de domínio', fieldErrors: [] }, { status: 400, statusText: 'Bad Request' });
+
+    expect(snackBar.open).toHaveBeenCalledOnceWith('Mensagem de domínio', 'Fechar', { duration: 6000 });
+  });
+
+  it('exibe fallback genérico quando erro não possui corpo', () => {
+    http.get(`${API_URL}/albums`).subscribe({ error: () => {} });
+
+    const req = controller.expectOne(`${API_URL}/albums`);
+    req.flush(null, { status: 418, statusText: 'Teapot' });
+
+    expect(snackBar.open).toHaveBeenCalledOnceWith(
+      'Não foi possível concluir a ação. Tente novamente.',
+      'Fechar',
+      { duration: 6000 }
+    );
+  });
 });
