@@ -121,6 +121,26 @@ describe('apiAuthInterceptor', () => {
     expect(req.request.headers.get('Authorization')).toBeNull();
   });
 
+  it('não adiciona header Authorization para /userinfo', () => {
+    http.get(`${TEST_API_BASE}/userinfo`).subscribe();
+
+    const req = controller.expectOne(`${TEST_API_BASE}/userinfo`);
+    req.flush({});
+
+    expect(req.request.headers.get('Authorization')).toBeNull();
+  });
+
+  it('usa apenas a primeira emissão do access token', () => {
+    oidcSpy.getAccessToken.and.returnValue(of('first-token', 'second-token'));
+
+    http.get(`${TEST_API_BASE}/albums`).subscribe();
+
+    const req = controller.expectOne(`${TEST_API_BASE}/albums`);
+    req.flush([]);
+
+    expect(req.request.headers.get('Authorization')).toBe('Bearer first-token');
+  });
+
   it('não chama getAccessToken para URLs não-API', () => {
     http.get('https://external.example.com/resource').subscribe();
 

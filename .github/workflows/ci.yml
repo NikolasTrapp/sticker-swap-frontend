@@ -45,27 +45,20 @@ jobs:
       - name: Run tests with coverage
         run: npm run test:ci
 
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: frontend-coverage
-          path: coverage/sticker-swap-frontend
-          retention-days: 7
-
       - name: Add coverage to job summary
         if: always()
         run: |
           node <<'NODE'
           const fs = require('node:fs');
 
+          fs.mkdirSync('ci-report', { recursive: true });
+
           const path = 'coverage/sticker-swap-frontend/coverage-summary.json';
 
           if (!fs.existsSync(path)) {
-            fs.appendFileSync(
-              process.env.GITHUB_STEP_SUMMARY,
-              '## Coverage\n\nCoverage summary not found.\n'
-            );
+            const markdown = '## Coverage\n\nCoverage summary not found.\n';
+            fs.writeFileSync('ci-report/coverage-summary.md', markdown);
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdown);
             process.exit(0);
           }
 
@@ -87,6 +80,7 @@ jobs:
             '',
           ].join('\n');
 
+          fs.writeFileSync('ci-report/coverage-summary.md', `${markdown}\n`);
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdown);
           NODE
 
@@ -98,7 +92,69 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
 
       - name: SonarQube Scan
+        id: sonar
         uses: SonarSource/sonarqube-scan-action@v8
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Add SonarQube to job summary
+        if: always()
+        env:
+          SONAR_OUTCOME: ${{ steps.sonar.outcome }}
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          fs.mkdirSync('ci-report', { recursive: true });
+
+          const reportTaskPath = '.scannerwork/report-task.txt';
+          const reportTask = {};
+
+          if (fs.existsSync(reportTaskPath)) {
+            for (const line of fs.readFileSync(reportTaskPath, 'utf8').split(/\r?\n/)) {
+              const separator = line.indexOf('=');
+              if (separator > 0) {
+                reportTask[line.slice(0, separator)] = line.slice(separator + 1);
+              }
+            }
+          }
+
+          const scanOutcome = process.env.SONAR_OUTCOME || 'unknown';
+          const qualityGate =
+            scanOutcome === 'success'
+              ? 'Passed'
+              : scanOutcome === 'failure'
+                ? 'Failed or scan failed'
+                : 'Not available';
+
+          const rows = [
+            ['Scan outcome', scanOutcome],
+            ['Quality Gate', qualityGate],
+            ['Project', reportTask.projectKey || 'Not available'],
+            ['Dashboard', reportTask.dashboardUrl ? `[Open SonarQube Cloud](${reportTask.dashboardUrl})` : 'Not available'],
+            ['Compute Engine task', reportTask.ceTaskUrl ? `[Open task](${reportTask.ceTaskUrl})` : 'Not available'],
+          ];
+
+          const markdown = [
+            '## SonarQube Cloud',
+            '',
+            '| Item | Value |',
+            '| --- | --- |',
+            ...rows.map(([label, value]) => `| ${label} | ${value} |`),
+            '',
+          ].join('\n');
+
+          fs.writeFileSync('ci-report/sonar-summary.md', `${markdown}\n`);
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n${markdown}`);
+          NODE
+
+      - name: Upload CI report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-ci-report
+          path: |
+            coverage/sticker-swap-frontend
+            ci-report
+          retention-days: 7
