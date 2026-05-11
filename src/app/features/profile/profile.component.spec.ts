@@ -94,7 +94,7 @@ describe('ProfileComponent', () => {
         nickname: '  Nick  ',
         cep: '',
         city: '',
-        state: 'sp',
+        state: 'SP',
         showCityStatePublicly: false,
         useLocationForSearch: true
       });

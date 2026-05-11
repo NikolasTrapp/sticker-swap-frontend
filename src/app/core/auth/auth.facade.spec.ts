@@ -178,38 +178,51 @@ describe('AuthFacade', () => {
       expect(oidc.logoffLocal).toHaveBeenCalledTimes(1);
     });
 
-    it('Então logoutAndRevoke controla busy e limpa sessão no sucesso', (done) => {
+    it('Então logoutAndRevoke controla busy e limpa sessão no sucesso', () => {
       // Arrange
       facade.authenticated.set(true);
       oidc.logoffAndRevokeTokens.and.returnValue(of(null) as Observable<never>);
+      let completed = false;
 
       // Act
       const result$ = facade.logoutAndRevoke();
 
       // Assert
       expect(facade.busy()).toBeTrue();
-      result$.subscribe(() => {
-        expect(oidc.logoffAndRevokeTokens).toHaveBeenCalledTimes(1);
-        expect(oidc.logoffLocal).toHaveBeenCalledTimes(1);
-        expect(facade.authenticated()).toBeFalse();
-        expect(facade.busy()).toBeFalse();
-        done();
-      });
-    });
-
-    it('Então logoutAndRevoke reseta busy mesmo quando o OIDC falha', (done) => {
-      // Arrange
-      oidc.logoffAndRevokeTokens.and.returnValue(throwError(() => new Error('oidc down')));
-
-      // Act
-      facade.logoutAndRevoke().subscribe({
-        error: () => {
-          // Assert
-          expect(facade.busy()).toBeFalse();
-          expect(oidc.logoffLocal).not.toHaveBeenCalled();
-          done();
+      result$.subscribe({
+        next: () => {
+          expect(oidc.logoffAndRevokeTokens).toHaveBeenCalledTimes(1);
+          expect(oidc.logoffLocal).toHaveBeenCalledTimes(1);
+          expect(facade.authenticated()).toBeFalse();
+        },
+        complete: () => {
+          completed = true;
         }
       });
+
+      expect(completed).toBeTrue();
+      expect(facade.busy()).toBeFalse();
+    });
+
+    it('Então logoutAndRevoke reseta busy mesmo quando o OIDC falha', () => {
+      // Arrange
+      oidc.logoffAndRevokeTokens.and.returnValue(throwError(() => new Error('oidc down')));
+      let failed = false;
+
+      // Act
+      const result$ = facade.logoutAndRevoke();
+
+      // Assert
+      expect(facade.busy()).toBeTrue();
+      result$.subscribe({
+        error: () => {
+          failed = true;
+          expect(oidc.logoffLocal).not.toHaveBeenCalled();
+        }
+      });
+
+      expect(failed).toBeTrue();
+      expect(facade.busy()).toBeFalse();
     });
   });
 

@@ -114,6 +114,11 @@ describe('CollectionComponent', () => {
       // Arrange
       component.ngOnInit();
       api.collection.calls.reset();
+      api.collection.and.returnValues(
+        of(page([item], { number: 0, size: 25 })),
+        of(page([item], { number: 2, size: 50 })),
+        of(page([item], { number: 0, size: 50 }))
+      );
 
       // Act
       component.setFilter('WANTED');
