@@ -272,13 +272,13 @@ describe('apiErrorInterceptor', () => {
     expect(snackBar.open).toHaveBeenCalledOnceWith('Campo: revise este campo.', 'Fechar', { duration: 6000 });
   });
 
-  [
+  ([
     ['brazilian zip code', 'CEP: informe um CEP com 8 dígitos.'],
     ['required', 'Nome: preencha este campo.'],
     ['size must be between 2 and 50', 'Descrição: confira o tamanho informado.'],
     ['must match "[A-Z]{2}"', 'UF: use o formato esperado.'],
     ['mensagem customizada', 'Código: mensagem customizada']
-  ].forEach(([backendMessage, expected]) => {
+  ] as Array<[string, string]>).forEach(([backendMessage, expected]) => {
     it(`exibe validação amigável para "${backendMessage}"`, () => {
       http.get(`${API_URL}/me/profile`).subscribe({ error: () => {} });
 
@@ -292,7 +292,7 @@ describe('apiErrorInterceptor', () => {
     });
   });
 
-  [
+  ([
     ['Bad credentials', 422, 'E-mail ou senha incorretos.'],
     ['Invalid or expired token', 422, 'Este link expirou ou já foi usado.'],
     ['Quantity must be zero or positive', 409, 'A quantidade não pode ser negativa.'],
@@ -304,14 +304,14 @@ describe('apiErrorInterceptor', () => {
     ['No resource at /missing', 404, 'Não encontramos esse recurso.'],
     ['Unauthorized', 422, 'Sua sessão expirou. Entre novamente.'],
     ['Internal Server Error', 422, 'Tivemos um problema inesperado. Tente novamente em instantes.']
-  ].forEach(([message, status, expected]) => {
+  ] as Array<[string, number, string]>).forEach(([message, status, expected]) => {
     it(`exibe mensagem de corpo amigável para "${message}"`, () => {
       http.get(`${API_URL}/me/profile`).subscribe({ error: () => {} });
 
       const req = controller.expectOne(`${API_URL}/me/profile`);
-      req.flush({ message, fieldErrors: [] }, { status: status as number, statusText: 'Error' });
+      req.flush({ message, fieldErrors: [] }, { status, statusText: 'Error' });
 
-      expect(snackBar.open).toHaveBeenCalledOnceWith(expected as string, 'Fechar', { duration: 6000 });
+      expect(snackBar.open).toHaveBeenCalledOnceWith(expected, 'Fechar', { duration: 6000 });
     });
   });
 

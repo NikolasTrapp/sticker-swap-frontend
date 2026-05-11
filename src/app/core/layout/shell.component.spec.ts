@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { WritableSignal, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { NotificationResponse } from '../api/api.types';
 import { AuthFacade, AuthProfile } from '../auth/auth.facade';
@@ -27,9 +27,11 @@ describe('ShellComponent', () => {
     profile: ReturnType<typeof signal<AuthProfile | null>>;
     isAdmin: ReturnType<typeof signal<boolean>>;
   };
-  let notifications: jasmine.SpyObj<NotificationService> & {
-    notifications: ReturnType<typeof signal<NotificationResponse[]>>;
-    unreadCount: ReturnType<typeof signal<number>>;
+  let notifications: {
+    notifications: WritableSignal<NotificationResponse[]>;
+    unreadCount: WritableSignal<number>;
+    markAllRead: jasmine.Spy;
+    markRead: jasmine.Spy;
   };
   let router: jasmine.SpyObj<Router>;
   let component: ShellComponent;
@@ -40,15 +42,15 @@ describe('ShellComponent', () => {
       profile: signal<AuthProfile | null>({ sub: 'user-1', email: 'user@test.local', role: 'USER' }),
       isAdmin: signal(false)
     };
-    notifications = jasmine.createSpyObj<NotificationService>('NotificationService', ['markAllRead', 'markRead']) as jasmine.SpyObj<NotificationService> & {
-      notifications: ReturnType<typeof signal<NotificationResponse[]>>;
-      unreadCount: ReturnType<typeof signal<number>>;
+    notifications = {
+      notifications: signal<NotificationResponse[]>([]),
+      unreadCount: signal(0),
+      markAllRead: jasmine.createSpy('markAllRead'),
+      markRead: jasmine.createSpy('markRead')
     };
-    notifications.notifications = signal([]);
-    notifications.unreadCount = signal(0);
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
 
-    component = new ShellComponent(auth as unknown as AuthFacade, notifications, router);
+    component = new ShellComponent(auth as unknown as AuthFacade, notifications as unknown as NotificationService, router);
   });
 
   describe('Dado a navegação principal', () => {

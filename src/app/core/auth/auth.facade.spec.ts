@@ -104,7 +104,7 @@ describe('AuthFacade', () => {
       // Arrange
       const result$ = new Subject<{ isAuthenticated: boolean; accessToken?: string }>();
       const values: boolean[] = [];
-      oidc.checkAuth.and.returnValue(result$ as Observable<never>);
+      oidc.checkAuth.and.returnValue(result$ as unknown as ReturnType<OidcSecurityService['checkAuth']>);
 
       // Act
       facade.checkAuth().subscribe((value) => values.push(value));

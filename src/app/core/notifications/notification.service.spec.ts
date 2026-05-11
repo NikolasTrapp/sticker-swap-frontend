@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { WritableSignal, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
@@ -31,7 +31,11 @@ const unreadNotification: NotificationResponse = {
 
 describe('NotificationService', () => {
   let api: jasmine.SpyObj<ApiService>;
-  let auth: jasmine.SpyObj<AuthFacade> & { authenticated: ReturnType<typeof signal<boolean>> };
+  let auth: {
+    authenticated: WritableSignal<boolean>;
+    accessToken: jasmine.Spy;
+    logoutLocal: jasmine.Spy;
+  };
   let config: jasmine.SpyObj<RuntimeConfigService>;
   let router: jasmine.SpyObj<Router>;
   let snackBar: jasmine.SpyObj<MatSnackBar>;
@@ -45,10 +49,11 @@ describe('NotificationService', () => {
       'markNotificationRead',
       'notifications'
     ]);
-    auth = jasmine.createSpyObj<AuthFacade>('AuthFacade', ['accessToken', 'logoutLocal']) as jasmine.SpyObj<AuthFacade> & {
-      authenticated: ReturnType<typeof signal<boolean>>;
+    auth = {
+      authenticated: signal(false),
+      accessToken: jasmine.createSpy('accessToken'),
+      logoutLocal: jasmine.createSpy('logoutLocal')
     };
-    auth.authenticated = signal(false);
     config = jasmine.createSpyObj<RuntimeConfigService>('RuntimeConfigService', ['snapshot']);
     router = jasmine.createSpyObj<Router>('Router', ['navigateByUrl']);
     snackBar = jasmine.createSpyObj<MatSnackBar>('MatSnackBar', ['open']);
@@ -72,7 +77,7 @@ describe('NotificationService', () => {
       providers: [
         NotificationService,
         { provide: ApiService, useValue: api },
-        { provide: AuthFacade, useValue: auth },
+        { provide: AuthFacade, useValue: auth as unknown as AuthFacade },
         { provide: RuntimeConfigService, useValue: config },
         { provide: Router, useValue: router },
         { provide: MatSnackBar, useValue: snackBar }
@@ -129,9 +134,12 @@ describe('NotificationService', () => {
       service.markConversationReadLocally('c1');
 
       // Assert
-      expect(service.notifications()).toEqual([
-        jasmine.objectContaining({ notificationId: 'n1', read: true }) as NotificationResponse,
-        jasmine.objectContaining({ notificationId: 'n2', read: false }) as NotificationResponse
+      expect(service.notifications().map((notification) => ({
+        notificationId: notification.notificationId,
+        read: notification.read
+      }))).toEqual([
+        { notificationId: 'n1', read: true },
+        { notificationId: 'n2', read: false }
       ]);
     });
   });
